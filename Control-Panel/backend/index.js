@@ -224,6 +224,25 @@ app.put("/update-user/:uid", async (req, res) => {
   }
 });
 
+app.get("/get-all-attendance", async (req, res) => {
+  try {
+    const snapshot = await db
+      .collection("attendance")
+      .orderBy("clockIn", "desc") // newest first
+      .get();
+
+    const records = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({ records });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch all attendance" });
+  }
+});
+
 
 
 // ─────────────────────────────────────────────

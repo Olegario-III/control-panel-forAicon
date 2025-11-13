@@ -152,7 +152,7 @@ export default function UserList({ refresh }) {
         </table>
       )}
 
-      <style jsx>{`
+      <style>{`
         .user-list {
           background: #1f2937;
           padding: 1.5rem;

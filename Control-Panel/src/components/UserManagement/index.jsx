@@ -1,12 +1,13 @@
 import { useState } from "react";
 import AddUserForm from "./AddUserForm";
 import UserList from "./UserList";
+import Attendance from "./Attendance"; // ⬅️ NEW
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserManagement() {
   const { role } = useAuth();
   const [refresh, setRefresh] = useState(false);
-  const [view, setView] = useState("list"); // "list" | "add"
+  const [view, setView] = useState("list"); // "list" | "add" | "attendance"
 
   const handleUserAdded = () => {
     setRefresh(!refresh);
@@ -32,11 +33,19 @@ export default function UserManagement() {
         >
           ➕ Add User
         </button>
+        <button
+          onClick={() => setView("attendance")}
+          style={view === "attendance" ? activeTab : tab}
+        >
+          🕒 Attendance
+        </button>
       </div>
 
       <div style={content}>
         {view === "add" ? (
           <AddUserForm onUserAdded={handleUserAdded} />
+        ) : view === "attendance" ? (
+          <Attendance />
         ) : (
           <UserList refresh={refresh} />
         )}
@@ -45,6 +54,7 @@ export default function UserManagement() {
   );
 }
 
+// ---------- styles ----------
 const container = {
   background: "#1f2937",
   padding: "20px",

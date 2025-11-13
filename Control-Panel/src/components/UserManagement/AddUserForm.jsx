@@ -75,6 +75,7 @@ export default function AddUserForm({ onUserAdded }) {
           <select value={role} onChange={(e) => setRole(e.target.value)}>
             <option value="admin">Admin</option>
             <option value="staff">Staff</option>
+            <option value="client">Client</option>
           </select>
         </div>
 
@@ -83,7 +84,7 @@ export default function AddUserForm({ onUserAdded }) {
         </button>
       </form>
 
-      <style jsx>{`
+      <style>{`
         .form-container {
           display: flex;
           justify-content: center;
@@ -139,15 +140,12 @@ export default function AddUserForm({ onUserAdded }) {
         }
 
         button {
-          width: 100%;
-          background: #2563eb;
-          color: white;
-          font-size: 1rem;
-          padding: 10px 15px;
+          margin: 0 5px;
+          padding: 6px 10px;
+          border-radius: 6px;
           border: none;
-          border-radius: 8px;
           cursor: pointer;
-          transition: background 0.2s, transform 0.1s;
+          transition: 0.2s;
         }
 
         button:hover:not(:disabled) {
