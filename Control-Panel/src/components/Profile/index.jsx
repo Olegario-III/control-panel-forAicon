@@ -45,7 +45,7 @@ export default function Profile() {
 
       <div className="content">{renderTab()}</div>
 
-      <style jsx>{`
+      <style>{`
         .profile {
           color: white;
         }

@@ -1,19 +1,24 @@
 // src/components/Profile/ClockInOut.jsx
 import { useEffect, useState } from "react";
-import { db } from "../../firebase/firestore";
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-  Timestamp,
-  orderBy,
-  limit,
-} from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
+
+const ACTIVE_KEY = "activeAttendanceId";
+
+function normalizeDate(value) {
+  if (!value) return null;
+  // Firestore-like object with _seconds
+  if (typeof value === "object" && value._seconds) {
+    return new Date(value._seconds * 1000);
+  }
+  // ISO string
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return isNaN(d) ? null : d;
+  }
+  // Date instance
+  if (value instanceof Date) return value;
+  return null;
+}
 
 export default function ClockInOut() {
   const { user } = useAuth();
@@ -23,50 +28,76 @@ export default function ClockInOut() {
 
   useEffect(() => {
     checkStatus();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
 
   const checkStatus = async () => {
     try {
-      const q = query(
-        collection(db, "attendance"),
-        where("uid", "==", user.uid),
-        orderBy("clockIn", "desc"),
-        limit(1)
-      );
-      const snap = await getDocs(q);
+      const res = await fetch(`http://localhost:5000/get-attendance/${user.uid}`);
+      const data = await res.json();
+      const records = data.records || [];
 
-      if (!snap.empty) {
-        const docSnap = snap.docs[0];
-        const data = docSnap.data();
-        setCurrentRecord({ id: docSnap.id, ...data });
+      // prefer the active id saved in localStorage (persist across navigation)
+      const storedId = localStorage.getItem(ACTIVE_KEY);
 
-        if (!data.clockOut) {
-          setStatus("Clocked In");
-          setTotalHours(null);
-          return;
+      // find record by storedId if present
+      let active = null;
+      if (storedId) {
+        active = records.find((r) => r.id === storedId) || null;
+      }
+
+      // if no stored active record, fall back to the latest active (clockOut === null)
+      if (!active) {
+        active = records.find((r) => r.clockOut == null) || null;
+      }
+
+      if (active) {
+        setCurrentRecord(active);
+        setStatus("Clocked In");
+        setTotalHours(null);
+        // ensure localStorage is in sync
+        localStorage.setItem(ACTIVE_KEY, active.id);
+        return;
+      }
+
+      // No active clock-in found. If there's a latest finished record we can show hours
+      if (records.length > 0) {
+        const latest = records[0];
+        if (latest.clockIn && latest.clockOut) {
+          const hrs = calculateHours(latest.clockIn, latest.clockOut);
+          setTotalHours(hrs);
         } else {
-          const hours = calculateHours(data.clockIn, data.clockOut);
-          setTotalHours(hours);
+          setTotalHours(null);
         }
       }
 
       setStatus("Clocked Out");
+      setCurrentRecord(null);
+      localStorage.removeItem(ACTIVE_KEY);
     } catch (err) {
       console.error("Error checking status:", err);
+      setStatus("Clocked Out");
     }
   };
 
   const handleClockIn = async () => {
     try {
-      const ref = await addDoc(collection(db, "attendance"), {
-        uid: user.uid,
-        email: user.email,
-        clockIn: Timestamp.now(),
-        clockOut: null,
+      const res = await fetch("http://localhost:5000/clock-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, email: user.email }),
       });
-      setCurrentRecord({ id: ref.id, clockIn: Timestamp.now(), clockOut: null });
+
+      const result = await res.json();
+      if (!result.success || !result.record) throw new Error("Clock-in failed");
+
+      const rec = result.record;
+      // Use server-returned record (id, clockIn, ...)
+      setCurrentRecord(rec);
       setStatus("Clocked In");
       setTotalHours(null);
+      // persist active record id to survive navigation
+      localStorage.setItem(ACTIVE_KEY, rec.id);
     } catch (err) {
       console.error("Clock-in failed:", err);
       alert("❌ Failed to clock in");
@@ -80,32 +111,46 @@ export default function ClockInOut() {
     }
 
     try {
-      const ref = doc(db, "attendance", currentRecord.id);
-      const clockOutTime = Timestamp.now();
+      const res = await fetch("http://localhost:5000/clock-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, recordId: currentRecord.id }),
+      });
 
-      await updateDoc(ref, { clockOut: clockOutTime });
-      const hours = calculateHours(currentRecord.clockIn, clockOutTime);
+      const result = await res.json();
+      if (!result.success || !result.record) throw new Error("Clock-out failed");
+
+      const updated = result.record;
+
+      // calculate hours using normalized dates
+      const hours = calculateHours(updated.clockIn, updated.clockOut);
 
       setStatus("Clocked Out");
       setTotalHours(hours);
       setCurrentRecord(null);
+      localStorage.removeItem(ACTIVE_KEY);
     } catch (err) {
       console.error("Clock-out failed:", err);
       alert("❌ Failed to clock out");
     }
   };
 
-  const calculateHours = (clockIn, clockOut) => {
-    if (!clockIn || !clockOut) return 0;
-    const diffMs = clockOut.toDate() - clockIn.toDate();
+  function calculateHours(clockIn, clockOut) {
+    const inDate = normalizeDate(clockIn);
+    const outDate = normalizeDate(clockOut);
+    if (!inDate || !outDate) return 0;
+    const diffMs = outDate - inDate;
     const hours = diffMs / (1000 * 60 * 60);
-    return hours.toFixed(2);
-  };
+    if (!isFinite(hours) || isNaN(hours)) return 0;
+    return parseFloat(hours.toFixed(2));
+  }
 
   return (
     <div style={card}>
       <h3>Attendance</h3>
-      <p>Status: <strong>{status}</strong></p>
+      <p>
+        Status: <strong>{status}</strong>
+      </p>
 
       {status === "Clocked Out" ? (
         <button onClick={handleClockIn}>Clock In</button>
@@ -115,7 +160,7 @@ export default function ClockInOut() {
         <p>Checking status...</p>
       )}
 
-      {totalHours && (
+      {totalHours !== null && (
         <p style={{ marginTop: "10px", color: "#facc15" }}>
           ⏱ Total Hours Worked: {totalHours} hrs
         </p>

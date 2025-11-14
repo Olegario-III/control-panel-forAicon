@@ -1,96 +1,48 @@
-import { useState } from "react";
-import AddUserForm from "./AddUserForm";
+import React, { useState } from "react";
 import UserList from "./UserList";
-import Attendance from "./Attendance"; // ⬅️ NEW
-import { useAuth } from "../../context/AuthContext";
+import AddUser from "./AddUser";
+import Attendance from "./Attendance";
+import "./UserManagement.css";
 
 export default function UserManagement() {
-  const { role } = useAuth();
-  const [refresh, setRefresh] = useState(false);
-  const [view, setView] = useState("list"); // "list" | "add" | "attendance"
-
-  const handleUserAdded = () => {
-    setRefresh(!refresh);
-    setView("list"); // go back to list after adding
-  };
-
-  if (role !== "admin") return <p>❌ Access denied.</p>;
+  const [page, setPage] = useState("list");
 
   return (
-    <div style={container}>
-      <h2 style={heading}>User Management</h2>
+    <div className="um-container">
 
-      <div style={tabs}>
+      {/* PAGE TITLE */}
+      <h2 className="um-title">User Management</h2>
+
+      {/* TOP TABS */}
+      <div className="um-tabs">
         <button
-          onClick={() => setView("list")}
-          style={view === "list" ? activeTab : tab}
+          className={page === "list" ? "active-tab" : ""}
+          onClick={() => setPage("list")}
         >
           👥 User List
         </button>
+
         <button
-          onClick={() => setView("add")}
-          style={view === "add" ? activeTab : tab}
+          className={page === "add" ? "active-tab" : ""}
+          onClick={() => setPage("add")}
         >
           ➕ Add User
         </button>
+
         <button
-          onClick={() => setView("attendance")}
-          style={view === "attendance" ? activeTab : tab}
+          className={page === "attendance" ? "active-tab" : ""}
+          onClick={() => setPage("attendance")}
         >
           🕒 Attendance
         </button>
       </div>
 
-      <div style={content}>
-        {view === "add" ? (
-          <AddUserForm onUserAdded={handleUserAdded} />
-        ) : view === "attendance" ? (
-          <Attendance />
-        ) : (
-          <UserList refresh={refresh} />
-        )}
+      {/* CONTENT */}
+      <div className="um-content-box">
+        {page === "list" && <UserList />}
+        {page === "add" && <AddUser />}
+        {page === "attendance" && <Attendance />}
       </div>
     </div>
   );
 }
-
-// ---------- styles ----------
-const container = {
-  background: "#1f2937",
-  padding: "20px",
-  borderRadius: "10px",
-  color: "#fff",
-  minHeight: "100%",
-};
-
-const heading = {
-  fontSize: "1.5rem",
-  marginBottom: "15px",
-};
-
-const tabs = {
-  display: "flex",
-  gap: "10px",
-  marginBottom: "20px",
-};
-
-const tab = {
-  background: "#374151",
-  color: "#fff",
-  border: "none",
-  padding: "10px 20px",
-  borderRadius: "8px",
-  cursor: "pointer",
-};
-
-const activeTab = {
-  ...tab,
-  background: "#3b82f6",
-};
-
-const content = {
-  marginTop: "10px",
-  background: "#111827",
-  padding: "20px",
-  borderRadius: "10px",
-};
