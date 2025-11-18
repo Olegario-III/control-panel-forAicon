@@ -19,7 +19,6 @@ export default function Sidebar({ onSelect }) {
         ]
       : [
           "Dashboard",
-          "Reports",
           "Product Catalog",
           "Documents",
           "Leads",

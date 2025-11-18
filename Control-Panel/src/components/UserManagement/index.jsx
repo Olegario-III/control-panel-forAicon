@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import UserList from "./UserList";
-import AddUser from "./AddUser";
+import AddUserForm from "./AddUserForm";
 import Attendance from "./Attendance";
 import "./UserManagement.css";
 
@@ -40,7 +40,7 @@ export default function UserManagement() {
       {/* CONTENT */}
       <div className="um-content-box">
         {page === "list" && <UserList />}
-        {page === "add" && <AddUser />}
+        {page === "add" && <AddUserForm />}
         {page === "attendance" && <Attendance />}
       </div>
     </div>

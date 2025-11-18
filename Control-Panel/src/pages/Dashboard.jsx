@@ -3,6 +3,8 @@ import { Navigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import UserManagement from "../components/UserManagement";
+import Reports from "../components/Reports";
+import ProductCatalog from "../components/ProductCatalog";
 import Profile from "../components/Profile"; // your Profile folder index
 
 export default function Dashboard() {
@@ -15,16 +17,14 @@ export default function Dashboard() {
   // --- Render the selected page ---
   const renderContent = () => {
     if (role === "admin" && selected === "User Management") return <UserManagement />;
+    if (role === "admin" && selected === "Reports") return <Reports />;
 
     switch (selected) {
       case "Dashboard":
         return <p>This is your overview dashboard. You can see summaries here.</p>;
 
-      case "Reports":
-        return <p>Reports section — view and generate your data reports here.</p>;
-
-      case "ProductCatalog":
-        return <p>Product Catalog — manage your items and inventory.</p>;
+      case "Product Catalog":
+        return <ProductCatalog />;
 
       case "Documents":
         return <p>Documents — upload and organize your files.</p>;

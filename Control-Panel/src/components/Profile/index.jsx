@@ -56,14 +56,14 @@ export default function Profile() {
           margin-bottom: 15px;
         }
 
-        button {
-          background: #334155;
-          color: white;
-          padding: 10px 15px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-        }
+        // button {
+        //   background: #334155;
+        //   color: white;
+        //   padding: 10px 15px;
+        //   border: none;
+        //   border-radius: 6px;
+        //   cursor: pointer;
+        // }
 
         button.active {
           background: #facc15;

@@ -1,67 +1,129 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const Attendance = () => {
-  const [attendance, setAttendance] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default function Attendance() {
+  const [records, setRecords] = useState([]);
+  const [editRecord, setEditRecord] = useState(null);
 
+  // ===== UTILITIES ===== //
+  function parseTime(t) {
+    if (!t) return null;
+    if (typeof t === "string") {
+      const d = new Date(t);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof t === "object" && t._seconds !== undefined) {
+      return new Date(t._seconds * 1000 + t._nanoseconds / 1e6);
+    }
+    return null;
+  }
+
+  function getTotalHours(clockIn, clockOut) {
+    const ci = parseTime(clockIn);
+    const co = parseTime(clockOut);
+
+    if (!ci || !co) return null;
+
+    const diffMs = co - ci;
+    return (diffMs / (1000 * 60 * 60)).toFixed(2);
+  }
+
+  // replace this with fetch from backend
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const response = await fetch("/get-all-attendance");
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        // Convert Firestore timestamps to readable strings
-        const records = data.records.map((rec) => ({
-          ...rec,
-          clockIn: rec.clockIn?._seconds
-            ? new Date(rec.clockIn._seconds * 1000).toLocaleString()
-            : "N/A",
-          clockOut: rec.clockOut?._seconds
-            ? new Date(rec.clockOut._seconds * 1000).toLocaleString()
-            : "N/A",
-        }));
-
-        setAttendance(records);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching attendance:", err);
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
-    fetchAttendance();
+    fetch("http://localhost:5000/get-all-attendance") // or your DB call
+      .then((r) => r.json())
+      .then((data) => setRecords(data.records));
   }, []);
 
-  if (loading) return <p>Loading attendance...</p>;
-  if (error) return <p>Error: {error}</p>;
+  // ===== DELETE ===== //
+  const deleteRecord = (id) => {
+    setRecords((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  // ===== EDIT ===== //
+  const saveEdit = () => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === editRecord.id ? editRecord : r))
+    );
+    setEditRecord(null);
+  };
 
   return (
-    <table border="1" cellPadding="5">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Clock In</th>
-          <th>Clock Out</th>
-        </tr>
-      </thead>
-      <tbody>
-        {attendance.map((record) => (
-          <tr key={record.id}>
-            <td>{record.id}</td>
-            <td>{record.name || "N/A"}</td>
-            <td>{record.clockIn}</td>
-            <td>{record.clockOut}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-};
+    <div className="attendance">
+      <h2>Attendance Records</h2>
 
-export default Attendance;
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Total Hours</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {records.map((r) => {
+            const total = getTotalHours(r.clockIn, r.clockOut);
+
+            return (
+              <tr key={r.id}>
+                <td>{r.email}</td>
+                <td>{parseTime(r.clockIn)?.toLocaleString() ?? "-"}</td>
+                <td>{parseTime(r.clockOut)?.toLocaleString() ?? "-"}</td>
+                <td>{total ?? "-"}</td>
+
+                <td>
+                  <button onClick={() => setEditRecord(r)}>Edit</button>
+                  <button onClick={() => deleteRecord(r.id)}>Delete</button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* EDIT MODAL */}
+      {editRecord && (
+        <div className="modal">
+          <h3>Edit Attendance</h3>
+
+          <label>Clock In</label>
+          <input
+            type="datetime-local"
+            value={
+              parseTime(editRecord.clockIn)
+                ?.toISOString()
+                .slice(0, 16) ?? ""
+            }
+            onChange={(e) =>
+              setEditRecord({
+                ...editRecord,
+                clockIn: new Date(e.target.value).toISOString(),
+              })
+            }
+          />
+
+          <label>Clock Out</label>
+          <input
+            type="datetime-local"
+            value={
+              parseTime(editRecord.clockOut)
+                ?.toISOString()
+                .slice(0, 16) ?? ""
+            }
+            onChange={(e) =>
+              setEditRecord({
+                ...editRecord,
+                clockOut: new Date(e.target.value).toISOString(),
+              })
+            }
+          />
+
+          <button onClick={saveEdit}>Save</button>
+          <button onClick={() => setEditRecord(null)}>Cancel</button>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -178,26 +178,6 @@ app.delete("/delete-report/:id", async (req, res) => {
   }
 });
 
-// Get ALL reports (for admin)
-app.get("/get-all-reports", async (req, res) => {
-  try {
-    const snapshot = await db
-      .collection("reports")
-      .orderBy("date", "desc")
-      .get();
-
-    const records = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    res.json({ records });
-  } catch (error) {
-    console.error("get-all-reports error:", error);
-    res.status(500).json({ error: "Failed to fetch all reports" });
-  }
-});
-
 // ─────────────────────────────────────────────
 // ⏱ ATTENDANCE ROUTES
 // ─────────────────────────────────────────────
@@ -305,6 +285,7 @@ app.delete("/delete-attendance/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete attendance" });
   }
 });
+
 
 // ─────────────────────────────────────────────
 // 🚀 START SERVER
