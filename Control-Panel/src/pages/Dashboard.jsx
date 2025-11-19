@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import UserManagement from "../components/UserManagement";
 import Reports from "../components/Reports";
 import ProductCatalog from "../components/ProductCatalog";
+import Inquiries from "../components/Inquiries";
+import Overview from "../components/Overview";
 import Profile from "../components/Profile"; // your Profile folder index
 
 export default function Dashboard() {
@@ -21,7 +23,7 @@ export default function Dashboard() {
 
     switch (selected) {
       case "Dashboard":
-        return <p>This is your overview dashboard. You can see summaries here.</p>;
+        return <Overview />;
 
       case "Product Catalog":
         return <ProductCatalog />;
@@ -33,7 +35,7 @@ export default function Dashboard() {
         return <p>Leads — track new potential clients.</p>;
 
       case "Inquiries":
-        return <p>Inquiries — view and respond to user inquiries.</p>;
+        return <Inquiries />;
 
       case "Profile":
         return <Profile />; // ✅ just render the Profile component

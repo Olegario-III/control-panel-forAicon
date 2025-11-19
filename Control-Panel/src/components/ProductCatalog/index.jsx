@@ -59,7 +59,7 @@ export default function CatalogIndex() {
   return (
     <div style={{ padding: "10px" }}>
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
         {sectionNames.map((name, idx) => (
           <button
             key={idx}

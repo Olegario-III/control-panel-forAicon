@@ -286,6 +286,56 @@ app.delete("/delete-attendance/:id", async (req, res) => {
   }
 });
 
+// GET — how many are clocked in right now (deduplicated & normalized)
+app.get("/attendance/clocked-in", async (req, res) => {
+  try {
+    const allDocs = await admin.firestore()
+      .collection("attendance")
+      .get();
+
+    // Filter for active entries (no valid clockOut recorded)
+    const active = allDocs.docs.filter(doc => {
+      const d = doc.data();
+      return !d.clockOut;   // FIXED
+    });
+
+    let admins = 0;
+    let staff = 0;
+
+    for (const doc of active) {
+      const data = doc.data();
+      const uid = data.uid;
+      if (!uid) continue;
+
+      const userSnap = await admin.firestore()
+        .collection("users")
+        .doc(uid)
+        .get();
+
+      if (!userSnap.exists) continue;
+
+      const userData = userSnap.data();
+      const role = (userData.role || userData.accountType || "").toLowerCase();
+
+      if (role === "admin") admins++;
+      else if (role === "staff") staff++;
+    }
+
+    return res.json({
+      admins,
+      staff,
+      activeDocs: active.length,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
 
 // ─────────────────────────────────────────────
 // 🚀 START SERVER
