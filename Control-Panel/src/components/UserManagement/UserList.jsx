@@ -69,87 +69,94 @@ export default function UserList({ refresh }) {
       {users.length === 0 ? (
         <p>No users yet.</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th style={{ textAlign: "center" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.uid}>
-                <td>
-                  {editingUser === u.uid ? (
-                    <input
-                      value={editData.name}
-                      onChange={(e) =>
-                        setEditData({ ...editData, name: e.target.value })
-                      }
-                    />
-                  ) : (
-                    u.name
-                  )}
-                </td>
-                <td>
-                  {editingUser === u.uid ? (
-                    <input
-                      type="email"
-                      value={editData.email}
-                      onChange={(e) =>
-                        setEditData({ ...editData, email: e.target.value })
-                      }
-                    />
-                  ) : (
-                    u.email
-                  )}
-                </td>
-                <td>
-                  {editingUser === u.uid ? (
-                    <select
-                      value={editData.role}
-                      onChange={(e) =>
-                        setEditData({ ...editData, role: e.target.value })
-                      }
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="staff">Staff</option>
-                      <option value="client">Client</option>
-                    </select>
-                  ) : (
-                    u.role
-                  )}
-                </td>
-                <td className="actions">
-                  {editingUser === u.uid ? (
-                    <>
-                      <button className="save" onClick={() => handleSave(u.uid)}>
-                        Save
-                      </button>
-                      <button className="cancel" onClick={() => setEditingUser(null)}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="edit" onClick={() => handleEdit(u)}>
-                        Edit
-                      </button>
-                      <button
-                        className="delete"
-                        onClick={() => handleDelete(u.uid, u.role)}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.uid}>
+                  <td>
+                    {editingUser === u.uid ? (
+                      <input
+                        value={editData.name}
+                        onChange={(e) =>
+                          setEditData({ ...editData, name: e.target.value })
+                        }
+                      />
+                    ) : (
+                      u.name
+                    )}
+                  </td>
+
+                  <td>
+                    {editingUser === u.uid ? (
+                      <input
+                        type="email"
+                        value={editData.email}
+                        onChange={(e) =>
+                          setEditData({ ...editData, email: e.target.value })
+                        }
+                      />
+                    ) : (
+                      u.email
+                    )}
+                  </td>
+
+                  <td>
+                    {editingUser === u.uid ? (
+                      <select
+                        value={editData.role}
+                        onChange={(e) =>
+                          setEditData({ ...editData, role: e.target.value })
+                        }
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="staff">Staff</option>
+                        <option value="client">Client</option>
+                      </select>
+                    ) : (
+                      u.role
+                    )}
+                  </td>
+
+                  <td className="actions">
+                    {editingUser === u.uid ? (
+                      <>
+                        <button className="save" onClick={() => handleSave(u.uid)}>
+                          Save
+                        </button>
+                        <button className="cancel" onClick={() => setEditingUser(null)}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="edit" onClick={() => handleEdit(u)}>
+                          Edit
+                        </button>
+                        <button
+                          className="delete"
+                          onClick={() => handleDelete(u.uid, u.role)}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+        </div>
       )}
 
       <style>{`
@@ -158,14 +165,22 @@ export default function UserList({ refresh }) {
           padding: 1.5rem;
           border-radius: 12px;
           color: #f9fafb;
+          width: 100%;
         }
 
         h3 {
           margin-bottom: 1rem;
         }
 
+        /* WRAPPER FOR RESPONSIVE SCROLL */
+        .table-wrapper {
+          width: 100%;
+          overflow-x: auto;
+        }
+
         table {
           width: 100%;
+          min-width: 600px;
           border-collapse: collapse;
           background: #374151;
           border-radius: 8px;
@@ -193,10 +208,11 @@ export default function UserList({ refresh }) {
 
         .actions {
           text-align: center;
+          min-width: 150px;
         }
 
         button {
-          margin: 0 5px;
+          margin: 4px;
           padding: 6px 10px;
           border-radius: 6px;
           border: none;
@@ -204,29 +220,46 @@ export default function UserList({ refresh }) {
           transition: 0.2s;
         }
 
-        button.edit {
-          background: #3b82f6;
-          color: white;
-        }
-
-        button.delete {
-          background: #ef4444;
-          color: white;
-        }
-
-        button.save {
-          background: #10b981;
-          color: white;
-        }
-
-        button.cancel {
-          background: #6b7280;
-          color: white;
-        }
+        button.edit { background: #3b82f6; color: white; }
+        button.delete { background: #ef4444; color: white; }
+        button.save { background: #10b981; color: white; }
+        button.cancel { background: #6b7280; color: white; }
 
         button:hover {
           opacity: 0.9;
           transform: scale(1.05);
+        }
+
+        /* =============== RESPONSIVE =============== */
+
+        /* Small tablets and below */
+        @media (max-width: 768px) {
+          .user-list {
+            padding: 1rem;
+          }
+
+          table {
+            font-size: 0.9rem;
+          }
+
+          th, td {
+            padding: 8px;
+          }
+
+          .actions {
+            min-width: 120px;
+          }
+        }
+
+        /* Mobile – Convert table rows into cards */
+        @media (max-width: 520px) {
+          table {
+            display: none;
+          }
+
+          .user-card {
+            display: block;
+          }
         }
       `}</style>
     </div>

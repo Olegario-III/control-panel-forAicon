@@ -85,80 +85,126 @@ export default function AddUserForm({ onUserAdded }) {
       </form>
 
       <style>{`
-        .form-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 30px;
-        }
+  .form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    width: 100%;
+  }
 
-        .form-card {
-          background: #1f2937;
-          color: #f9fafb;
-          padding: 25px 30px;
-          border-radius: 12px;
-          width: 100%;
-          max-width: 400px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
+  .form-card {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 25px 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
 
-        h3 {
-          margin-bottom: 20px;
-          text-align: center;
-          font-size: 1.5rem;
-          color: #e5e7eb;
-        }
+  h3 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #e5e7eb;
+  }
 
-        .form-group {
-          margin-bottom: 15px;
-        }
+  .form-group {
+    margin-bottom: 15px;
+  }
 
-        label {
-          display: block;
-          font-size: 0.9rem;
-          color: #9ca3af;
-          margin-bottom: 6px;
-        }
+  label {
+    display: block;
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
 
-        input,
-        select {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #374151;
-          border-radius: 8px;
-          background: #111827;
-          color: #f9fafb;
-          font-size: 0.95rem;
-          transition: all 0.2s;
-        }
+  input,
+  select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    background: #111827;
+    color: #f9fafb;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
 
-        input:focus,
-        select:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
-        }
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+  }
 
-        button {
-          margin: 0 5px;
-          padding: 6px 10px;
-          border-radius: 6px;
-          border: none;
-          cursor: pointer;
-          transition: 0.2s;
-        }
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: #3b82f6;
+    color: white;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+  }
 
-        button:hover:not(:disabled) {
-          background: #1d4ed8;
-          transform: translateY(-1px);
-        }
+  button:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+  }
 
-        button:disabled {
-          background: #3b82f6;
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      `}</style>
+  button:disabled {
+    background: #3b82f6;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* =======================
+      📱 MOBILE RESPONSIVE
+     =======================*/
+  @media (max-width: 600px) {
+    .form-container {
+      padding: 15px;
+    }
+
+    .form-card {
+      padding: 20px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    input,
+    select {
+      padding: 10px;
+      font-size: 0.95rem;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 0.95rem;
+    }
+  }
+
+  /* Extra small devices */
+  @media (max-width: 400px) {
+    .form-card {
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    input,
+    select {
+      padding: 9px;
+    }
+  }
+`}</style>
     </div>
   );
 }

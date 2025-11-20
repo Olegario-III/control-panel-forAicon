@@ -1,22 +1,27 @@
+// src/pages/Dashboard.jsx
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
+
 import UserManagement from "../components/UserManagement";
 import Reports from "../components/Reports";
 import ProductCatalog from "../components/ProductCatalog";
 import Inquiries from "../components/Inquiries";
 import Overview from "../components/Overview";
-import Profile from "../components/Profile"; // your Profile folder index
+import Profile from "../components/Profile";
 
 export default function Dashboard() {
   const { user, role, loading } = useAuth();
   const [selected, setSelected] = useState("Dashboard");
 
+  // Mobile: sidebar open/close
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   if (loading) return <p>Loading...</p>;
   if (!user) return <Navigate to="/login" replace />;
 
-  // --- Render the selected page ---
+  // Render pages
   const renderContent = () => {
     if (role === "admin" && selected === "User Management") return <UserManagement />;
     if (role === "admin" && selected === "Reports") return <Reports />;
@@ -24,35 +29,47 @@ export default function Dashboard() {
     switch (selected) {
       case "Dashboard":
         return <Overview />;
-
       case "Product Catalog":
         return <ProductCatalog />;
-
       case "Documents":
         return <p>Documents — upload and organize your files.</p>;
-
       case "Leads":
         return <p>Leads — track new potential clients.</p>;
-
       case "Inquiries":
         return <Inquiries />;
-
       case "Profile":
-        return <Profile />; // ✅ just render the Profile component
-
+        return <Profile />;
       default:
         return <p>Select a section from the sidebar.</p>;
     }
   };
 
   return (
-    <div className="dashboard">
-      <Sidebar onSelect={setSelected} />
-      <main className="main">
+    <div className="dashboard-wrapper">
+
+      {/* Glow overlay when mobile sidebar is open */}
+      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)}></div>}
+
+      {/* Sidebar */}
+      <Sidebar
+        onSelect={(item) => {
+          setSelected(item);
+          setSidebarOpen(false); // close after selection
+        }}
+        mobileOpen={sidebarOpen}
+      />
+
+      <main className="main-area">
+        {/* Mobile Header */}
+        <button className="hamburger" onClick={() => setSidebarOpen(true)}>
+          ☰
+        </button>
+
         <header className="header">
           <h1>{selected}</h1>
           <p>
-            Welcome, <strong>{role === "admin" ? "Admin" : "Staff"}</strong> ({user.email})
+            Welcome,{" "}
+            <strong>{role === "admin" ? "Admin" : "Staff"}</strong> ({user.email})
           </p>
         </header>
 
@@ -60,25 +77,29 @@ export default function Dashboard() {
       </main>
 
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
-
-        body, html, #root {
-          height: 100%;
-          margin: 0;
-        }
-
-        .dashboard {
+        .dashboard-wrapper {
           display: flex;
           width: 100vw;
           height: 100vh;
           background-color: #0f172a;
           color: #f9fafb;
           overflow: hidden;
+          position: relative;
         }
 
-        .main {
+        /* Mobile overlay when sidebar is open */
+        .overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          z-index: 9;
+        }
+
+        /* Main content */
+        .main-area {
           flex: 1;
           display: flex;
           flex-direction: column;
@@ -86,6 +107,7 @@ export default function Dashboard() {
           overflow-y: auto;
         }
 
+        /* Header */
         .header {
           border-bottom: 1px solid #1e293b;
           margin-bottom: 20px;
@@ -105,20 +127,29 @@ export default function Dashboard() {
           border-radius: 10px;
         }
 
-        ul {
-          list-style-type: none;
-          padding: 0;
+        /* MOBILE ONLY */
+        .hamburger {
+          display: none;
         }
 
-        li {
-          margin-bottom: 10px;
-          background: #334155;
-          padding: 10px;
-          border-radius: 6px;
-        }
+        @media (max-width: 900px) {
+          .hamburger {
+            display: block;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: white;
+            font-size: 1.2rem;
+          }
 
-        li:hover {
-          background: #475569;
+          .main-area {
+            padding-top: 55px;
+          }
         }
       `}</style>
     </div>

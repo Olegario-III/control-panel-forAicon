@@ -1,96 +1,89 @@
 // src/components/Sidebar.jsx
 import { useAuth } from "../context/AuthContext";
 
-export default function Sidebar({ onSelect }) {
-  const { role, logout } = useAuth();
+export default function Sidebar({ onSelect, mobileOpen }) {
+  const { role } = useAuth();
 
-  // Define sidebar items based on user role
-  const items =
-    role === "admin"
-      ? [
-          "Dashboard",
-          "User Management",
-          "Reports",
-          "Product Catalog",
-          "Documents",
-          "Leads",
-          "Inquiries",
-          "Profile",
-        ]
-      : [
-          "Dashboard",
-          "Product Catalog",
-          "Documents",
-          "Leads",
-          "Inquiries",
-          "Profile",
-        ];
+  const menuItems = [
+    "Dashboard",
+    "Product Catalog",
+    "Documents",
+    "Leads",
+    "Inquiries",
+    "Profile",
+  ];
+
+  const adminOnly = ["User Management", "Reports"];
 
   return (
-    <aside className="sidebar">
-      <h2>Control Panel</h2>
+    <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
       <nav>
-        {items.map((item) => (
-          <button key={item} onClick={() => onSelect(item)}>
-            {item}
-          </button>
-        ))}
+        <ul>
+          {menuItems.map((item) => (
+            <li key={item} onClick={() => onSelect(item)}>
+              {item}
+            </li>
+          ))}
+
+          {role === "admin" &&
+            adminOnly.map((item) => (
+              <li key={item} className="admin-item" onClick={() => onSelect(item)}>
+                {item}
+              </li>
+            ))}
+        </ul>
       </nav>
 
-      <button className="logout" onClick={logout}>
-        Logout
-      </button>
-
-      {/* Regular <style> tag for React (no jsx attr) */}
       <style>{`
         .sidebar {
-          width: 220px;
-          background: #111827;
-          color: white;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          width: 240px;
+          background: #1e293b;
+          padding: 20px 0;
+          height: 100%;
+          border-right: 1px solid #334155;
+          position: relative;
+          z-index: 11;
         }
 
-        h2 {
-          font-size: 1.3rem;
-          margin-bottom: 20px;
-          text-align: center;
+        /* Menu list */
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
         }
 
-        nav {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        button {
-          background: transparent;
-          color: white;
-          border: none;
-          text-align: left;
-          padding: 10px;
+        li {
+          padding: 14px 20px;
           cursor: pointer;
-          border-radius: 6px;
-          transition: background 0.2s;
+          font-size: 1rem;
+          color: #e2e8f0;
+          transition: 0.2s;
         }
 
-        button:hover {
-          background: #374151;
+        li:hover {
+          background: #334155;
         }
 
-        .logout {
-          background: #dc2626;
-          margin-top: 20px;
-          padding: 10px;
-          border-radius: 6px;
-          font-weight: bold;
-          text-align: center;
+        /* Admin-only section */
+        .admin-item {
+          border-top: 1px solid #334155;
+          margin-top: 10px;
+          padding-top: 16px;
         }
 
-        .logout:hover {
-          background: #b91c1c;
+        /* MOBILE SIDEBAR */
+        @media (max-width: 900px) {
+          .sidebar {
+            position: fixed;
+            left: -260px;
+            top: 0;
+            height: 100vh;
+            transition: left 0.3s ease;
+          }
+
+          .sidebar.open {
+            left: 0;
+          }
         }
       `}</style>
     </aside>

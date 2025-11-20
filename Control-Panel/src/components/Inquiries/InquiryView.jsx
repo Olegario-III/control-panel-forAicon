@@ -1,131 +1,95 @@
-import { useEffect, useState } from "react";
+import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { collection, onSnapshot, addDoc } from "firebase/firestore";
 
-export default function InquiryView({ inquiry }) {
-  const [replyText, setReplyText] = useState("");
-  const [messages, setMessages] = useState([]);
+export default function InquiryView({ inquiry, onBack }) {
+  
+  const replyWithGmail = async () => {
+    // Open Gmail with prefilled message
+    const subject = encodeURIComponent(`Reply to your inquiry about ${inquiry.product}`);
+    const body = encodeURIComponent(
+      `Hi ${inquiry.name},\n\nRegarding your inquiry:\n"${inquiry.message}"\n\n`
+    );
 
-  // Your REAL Apps Script Web App URL
-  const WEBHOOK_URL =
-    "https://script.google.com/macros/s/AKfycbyrra2JmDtHxMe1493i5-yuLwvXOF_8S5FVqe4U7nVtXgA5PKXp9mo3-2jh_q2XpTk/exec";
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${inquiry.email}&su=${subject}&body=${body}`,
+      "_blank"
+    );
 
-  // Load conversation messages live
-  useEffect(() => {
-    if (!inquiry?.id) return;
-
-    const messagesRef = collection(db, `inquiries/${inquiry.id}/messages`);
-
-    const unsubscribe = onSnapshot(messagesRef, (snapshot) => {
-      const loaded = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMessages(loaded);
-    });
-
-    return () => unsubscribe();
-  }, [inquiry]);
-
-  // Sending reply
-  const sendReply = async () => {
-    if (!replyText.trim()) return;
-
+    // Mark as replied
     try {
-      // Apps Script needs form-data because JSON is blocked by CORS
-      const formData = new FormData();
-      formData.append("to", inquiry.email);
-      formData.append("message", replyText);
-      formData.append("inquiryId", inquiry.id);
-
-      await fetch(WEBHOOK_URL, {
-        method: "POST",
-        mode: "no-cors", // MUST USE no-cors for Apps Script
-        body: formData,
+      await updateDoc(doc(db, "inquiries", inquiry.id), {
+        replied: true,
+        repliedAt: Date.now(),
       });
-
-      // Save message to Firestore
-      await addDoc(collection(db, `inquiries/${inquiry.id}/messages`), {
-        message: replyText,
-        sender: "admin",
-        timestamp: Date.now(),
-      });
-
-      setReplyText("");
-      alert("Reply sent!");
     } catch (err) {
-      console.error("Send reply error:", err);
-      alert("Failed to send reply.");
+      console.error("Failed to update replied status: ", err);
     }
   };
 
   return (
-    <div style={{ padding: "20px", height: "100%" }}>
-      <h2>{inquiry.name}</h2>
-      <p><strong>Email:</strong> {inquiry.email}</p>
-      <p><strong>Product:</strong> {inquiry.product}</p>
-      <p><strong>Original Message:</strong> {inquiry.message}</p>
+    <div className="inquiry-view">
+      <button className="back-btn" onClick={onBack}>← Back</button>
 
-      <hr />
+      <h2 className="title">{inquiry.name}</h2>
 
-      <h3>Conversation</h3>
-      <div
-        style={{
-          maxHeight: "250px",
-          overflowY: "auto",
-          background: "#fafafa",
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-        }}
-      >
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            style={{
-              background: msg.sender === "admin" ? "#e7f0ff" : "#f2f2f2",
-              padding: "10px",
-              marginBottom: "10px",
-              borderRadius: "6px",
-            }}
-          >
-            <strong>{msg.sender === "admin" ? "You" : inquiry.name}</strong>
-            <p style={{ margin: "5px 0 0" }}>{msg.message}</p>
-          </div>
-        ))}
+      <div className="info-box">
+        <p><strong>Email:</strong> {inquiry.email}</p>
+        <p><strong>Product:</strong> {inquiry.product}</p>
+        <p><strong>Message:</strong></p>
+        <div className="msg-block">{inquiry.message}</div>
       </div>
 
-      <hr />
-
-      <h3>Write a Reply</h3>
-      <textarea
-        value={replyText}
-        onChange={(e) => setReplyText(e.target.value)}
-        rows="4"
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ccc",
-          resize: "vertical",
-        }}
-        placeholder="Type your reply..."
-      />
-
-      <button
-        onClick={sendReply}
-        style={{
-          marginTop: "10px",
-          padding: "10px 20px",
-          backgroundColor: "#1d4ed8",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Send Reply
+      <button className="reply-btn" onClick={replyWithGmail}>
+        Reply via Gmail
       </button>
+
+      <style>{`
+        .inquiry-view {
+          background: #1e293b;
+          padding: 20px;
+          border-radius: 10px;
+          color: #f9fafb;
+        }
+        .title {
+          font-size: 1.6rem;
+          color: #facc15;
+          margin-top: 0;
+        }
+        .msg-block {
+          background: #334155;
+          padding: 12px;
+          border-radius: 8px;
+          margin-top: 5px;
+        }
+        .reply-btn {
+          margin-top: 20px;
+          padding: 12px 20px;
+          background: #facc15;
+          color: #0f172a;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+        .reply-btn:hover {
+          background: #eab308;
+        }
+        .back-btn {
+          display: none;
+          margin-bottom: 15px;
+          padding: 8px 14px;
+          background: #334155;
+          color: #f9fafb;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        @media (max-width: 900px) {
+          .back-btn {
+            display: block;
+          }
+        }
+      `}</style>
     </div>
   );
 }
