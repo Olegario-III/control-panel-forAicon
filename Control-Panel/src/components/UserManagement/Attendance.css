@@ -10,28 +10,10 @@
   font-size: 1.6rem;
 }
 
-/* Grid for mobile only */
 .attendance-grid {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-}
-
-/* Default: single column (desktop/tablet) */
-@media (min-width: 501px) {
-  .attendance-grid {
-    display: block; /* just stack full-width cards */
-  }
-
-  .attendance-card {
-    width: 100%; /* full width */
-  }
-}
-
-/* Mobile: cards stacked nicely */
-@media (max-width: 500px) {
-  .attendance-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .attendance-card {
@@ -44,8 +26,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .attendance-buttons button {
@@ -62,8 +44,10 @@
   opacity: 0.9;
 }
 
+/* TABLE */
 .attendance-table-wrapper {
-  overflow-x: auto;
+  width: 100%;
+  overflow: hidden;
 }
 
 .attendance-table {
@@ -91,31 +75,33 @@
   color: #fff;
 }
 
-.actions .edit {
-  background: #3b82f6;
-}
+.actions .edit { background: #3b82f6; }
+.actions .delete { background: #ef4444; }
+.actions .save { background: #10b981; }
+.actions .cancel { background: #6b7280; }
 
-.actions .delete {
-  background: #ef4444;
-}
+/* MOBILE stacked cards */
+.attendance-mobile { display: none; flex-direction: column; gap: 15px; margin-top: 10px; }
+.attendance-mobile-card { background: #0f172a; padding: 15px; border-radius: 10px; color: white; }
+.attendance-mobile-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.attendance-mobile-row strong { color: #facc15; }
+.attendance-mobile-actions { margin-top: 10px; }
+.attendance-mobile-actions button { margin-right: 8px; padding: 5px 10px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+.attendance-mobile-actions .edit { background: #3b82f6; }
+.attendance-mobile-actions .delete { background: #ef4444; }
+.attendance-mobile-actions .save { background: #10b981; }
+.attendance-mobile-actions .cancel { background: #6b7280; }
 
-.actions .save {
-  background: #10b981;
-}
-
-.actions .cancel {
-  background: #6b7280;
-}
-
-/* Mobile tweaks */
+/* RESPONSIVE */
 @media (max-width: 500px) {
-  .attendance-card-header {
-    flex-direction: column;
-    gap: 8px;
-  }
+  .attendance-table-wrapper { display: none !important; }
+  .attendance-mobile { display: flex !important; }
+  .attendance-card { padding: 12px; }
+  .attendance-card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .attendance-buttons button { width: 100%; margin: 5px 0; }
+}
 
-  .attendance-buttons button {
-    width: 100%;
-    margin: 3px 0;
-  }
+@media (min-width: 501px) {
+  .attendance-mobile { display: none !important; }
+  .attendance-table-wrapper { display: block !important; }
 }

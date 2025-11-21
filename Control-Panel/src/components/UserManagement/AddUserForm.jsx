@@ -76,6 +76,7 @@ export default function AddUserForm({ onUserAdded }) {
             <option value="admin">Admin</option>
             <option value="staff">Staff</option>
             <option value="client">Client</option>
+            <option value="client">Interns</option>
           </select>
         </div>
 
@@ -141,7 +142,6 @@ export default function AddUserForm({ onUserAdded }) {
   }
 
   button {
-    width: 100%;
     padding: 12px;
     margin-top: 10px;
     background: #3b82f6;

@@ -1,42 +1,39 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function DailyReports() {
   const { user } = useAuth();
-
   const [report, setReport] = useState("");
   const [date, setDate] = useState("");
   const [reports, setReports] = useState([]);
   const [msg, setMsg] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  // --------------------------
-  // SAFE DATE PARSING
-  // --------------------------
+  // -------------------------- DATE HELPERS --------------------------
   const parseDate = (val) => {
     if (!val) return null;
-
-    // Firestore timestamp { _seconds, _nanoseconds }
-    if (typeof val === "object" && "_seconds" in val) {
-      return new Date(val._seconds * 1000);
-    }
-
-    // ISO string
+    if (typeof val === "object" && "_seconds" in val) return new Date(val._seconds * 1000);
     if (typeof val === "string") {
       const d = new Date(val);
       if (!isNaN(d)) return d;
     }
-
-    // JS Date object
     if (val instanceof Date) return val;
-
     return null;
   };
 
   const formatDisplayDate = (val) => {
     const d = parseDate(val);
     if (!d) return "Invalid Date";
-    return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+    return d.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const formatDateInput = (val) => {
@@ -45,9 +42,7 @@ export default function DailyReports() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
-  // --------------------------
-  // FETCH REPORTS
-  // --------------------------
+  // -------------------------- FETCH REPORTS --------------------------
   const fetchReports = async () => {
     const res = await fetch(`http://localhost:5000/get-reports/${user.uid}`);
     const data = await res.json();
@@ -58,22 +53,12 @@ export default function DailyReports() {
     fetchReports();
   }, []);
 
-  // --------------------------
-  // SUBMIT / UPDATE REPORT
-  // --------------------------
+  // -------------------------- SUBMIT / UPDATE --------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // auto-assign today's date if empty
     const reportDate = date ? new Date(date) : new Date();
 
-    const payload = {
-      uid: user.uid,
-      email: user.email,
-      report,
-      date: reportDate.toISOString(),
-    };
-
+    const payload = { uid: user.uid, email: user.email, report, date: reportDate.toISOString() };
     let url = "http://localhost:5000/add-report";
     let method = "POST";
 
@@ -87,50 +72,66 @@ export default function DailyReports() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     const data = await res.json();
     setMsg(data.message || data.error);
 
     setReport("");
     setDate("");
     setEditingId(null);
-
     fetchReports();
   };
 
-  // --------------------------
-  // EDIT REPORT
-  // --------------------------
+  // -------------------------- EDIT --------------------------
   const editReport = (item) => {
     setEditingId(item.id);
     setReport(item.report);
     setDate(formatDateInput(item.date));
   };
 
-  // --------------------------
-  // DELETE REPORT
-  // --------------------------
+  // -------------------------- DELETE --------------------------
   const deleteReport = async (id) => {
     if (!confirm("Delete this report?")) return;
-    const res = await fetch(`http://localhost:5000/delete-report/${id}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(`http://localhost:5000/delete-report/${id}`, { method: "DELETE" });
     const data = await res.json();
     setMsg(data.message || data.error);
     fetchReports();
   };
 
-  return (
-    <div>
-      <h3>Daily Report</h3>
+  // -------------------------- PDF EXPORT --------------------------
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Daily Reports", 14, 20);
 
-      <form onSubmit={handleSubmit}>
+    const tableData = reports.map((r) => [formatDisplayDate(r.date), r.report]);
+    autoTable(doc, {
+      head: [["Date", "Report"]],
+      body: tableData,
+      startY: 30,
+      theme: "grid",
+      headStyles: { fillColor: [255, 255, 255], textColor: 0, lineColor: 0 },
+      bodyStyles: { fillColor: [255, 255, 255], textColor: 0, lineColor: 0 },
+      styles: { fontSize: 10 },
+    });
+
+    doc.save("daily-reports.pdf");
+  };
+
+  return (
+    <div className="daily-reports">
+      <h3>Daily Report</h3>
+      <button className="pdf-btn" onClick={exportPDF}>
+        📄 Export PDF
+      </button>
+
+      <form onSubmit={handleSubmit} className="report-form">
         <label>Date *</label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          style={{ display: "block", marginBottom: 10, padding: 6 }}
+          required
+          className="date-picker"
         />
 
         <textarea
@@ -138,48 +139,43 @@ export default function DailyReports() {
           value={report}
           onChange={(e) => setReport(e.target.value)}
           required
-          style={{ width: "100%", height: 120, marginBottom: 10, padding: 10 }}
         />
 
-        <button type="submit">
-          {editingId ? "Update Report" : "Submit Report"}
-        </button>
-
-        {editingId && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditingId(null);
-              setReport("");
-              setDate("");
-            }}
-            style={{ marginLeft: 10, background: "gray" }}
-          >
-            Cancel Edit
-          </button>
-        )}
+        <div className="form-buttons">
+          <button type="submit">{editingId ? "Update" : "Submit"}</button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(null);
+                setReport("");
+                setDate("");
+              }}
+              className="cancel-btn"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       <p>{msg}</p>
-
-      <hr style={{ margin: "20px 0" }} />
+      <hr />
 
       <h4>Previous Reports</h4>
-
       {reports.length === 0 ? (
         <p>No reports yet.</p>
       ) : (
-        <ul>
+        <ul className="report-list">
           {reports.map((r) => (
             <li key={r.id}>
               <strong>{formatDisplayDate(r.date)}</strong>
-              <br />
-              {r.report}
-              <div style={{ marginTop: 8 }}>
-                <button onClick={() => editReport(r)} style={{ marginRight: 10, background: "#3b82f6" }}>
+              <p>{r.report}</p>
+              <div className="actions">
+                <button onClick={() => editReport(r)} className="edit-btn">
                   Edit
                 </button>
-                <button onClick={() => deleteReport(r.id)} style={{ background: "#ef4444" }}>
+                <button onClick={() => deleteReport(r.id)} className="delete-btn">
                   Delete
                 </button>
               </div>
@@ -188,21 +184,116 @@ export default function DailyReports() {
         </ul>
       )}
 
-      <style>{`
-        ul {
-          list-style-type: none;
+      <style jsx>{`
+        .daily-reports {
+          background: #f8fafc;
+          color: #111827;
+          padding: 15px;
+          border-radius: 8px;
+        }
+
+        .pdf-btn {
+          background: #facc15;
+          color: #1f2937;
+          font-weight: bold;
+          padding: 6px 10px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-bottom: 15px;
+        }
+
+        .report-form {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        input,
+        textarea {
+          width: 100%;
+          padding: 6px 8px;
+          border-radius: 4px;
+          border: 1px solid #d1d5db;
+          font-size: 0.9rem;
+        }
+
+        .date-picker {
+          max-width: 180px;
+        }
+
+        .form-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        button[type="submit"] {
+          background: #3b82f6;
+          color: #fff;
+          font-weight: bold;
+          padding: 6px 12px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          width: auto;
+        }
+
+        .cancel-btn {
+          background: #6b7280;
+          color: #fff;
+          padding: 6px 12px;
+          border-radius: 6px;
+          width: auto;
+        }
+
+        .report-list {
+          list-style: none;
           padding: 0;
         }
 
-        li {
-          margin-bottom: 10px;
-          background: #334155;
+        .report-list li {
+          background: #fff;
+          color: #111827;
           padding: 10px;
           border-radius: 6px;
+          border: 1px solid #d1d5db;
+          margin-bottom: 10px;
         }
 
-        li:hover {
-          background: #475569;
+        .actions {
+          margin-top: 8px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .edit-btn,
+        .delete-btn {
+          padding: 4px 10px;
+          border-radius: 4px;
+          border: none;
+          cursor: pointer;
+          font-size: 0.85rem;
+        }
+
+        .edit-btn {
+          background: #3b82f6;
+          color: #fff;
+        }
+
+        .delete-btn {
+          background: #ef4444;
+          color: #fff;
+        }
+
+        @media (max-width: 640px) {
+          .form-buttons {
+            flex-direction: column;
+          }
+          .pdf-btn {
+            width: 100%;
+          }
         }
       `}</style>
     </div>

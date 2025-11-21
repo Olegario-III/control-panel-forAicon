@@ -1,3 +1,4 @@
+// Control-Panel\src\components\Overview\Calendar.jsx
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firestore";
@@ -85,23 +86,25 @@ export default function Calendar({ title, offset }) {
         ))}
 
         {/* Days */}
-        {Array.from({ length: daysInMonth }, (_, i) => {
-          const day = i + 1;
-
-          return (
-            <div
-              key={day}
-              className="day-cell"
-              onClick={() => {
-                setEditingDate(day);
-                setText(notes[day] || "");
-              }}
-            >
-              <div className="day-number">{day}</div>
-              <div className="note-text">{notes[day]}</div>
-            </div>
-          );
-        })}
+        {/* Days */}
+{Array.from({ length: daysInMonth }, (_, i) => {
+  const day = i + 1;
+  const dayName = new Date(year, month, day).toLocaleDateString(undefined, { weekday: "short" });
+  return (
+    <div
+      key={day}
+      className="day-cell"
+      onClick={() => {
+        setEditingDate(day);
+        setText(notes[day] || "");
+      }}
+    >
+      <div className="day-number">{day}</div>
+      <div className="day-name">{dayName}</div> {/* New: day name */}
+      <div className="note-text">{notes[day]}</div>
+    </div>
+  );
+})}
       </div>
 
       {/* Popup Editor */}

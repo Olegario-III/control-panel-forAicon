@@ -120,3 +120,67 @@
   display: flex;
   justify-content: space-between;
 }
+
+/* Big screens (PC) */
+@media (min-width: 1024px) {
+  .calendar-row {
+    display: flex;
+    gap: 16px;
+  }
+
+  .calendar-box {
+    flex: 1;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(7, 1fr); /* 7 days in a week */
+  }
+
+  .day-name {
+    display: none; /* hide day names in big screens */
+  }
+
+  .day-header {
+    display: block;
+  }
+}
+
+/* Medium screens (Tablet) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .calendar-row {
+    display: grid;
+    grid-template-columns: 1fr; /* each calendar full width */
+    gap: 8px;
+  }
+}
+
+/* Small screens (Mobile) */
+@media (max-width: 767px) {
+  .calendar-row {
+    display: grid;
+    grid-template-columns: 1fr; /* each calendar full width */
+    gap: 8px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 cells per row */
+  }
+
+  .day-name {
+    display: block;
+    font-size: 0.7rem;
+    color: #aaa;
+  }
+
+  .day-header {
+    display: none;
+  }
+
+  .day-cell {
+    width: 100%;
+  }
+
+  .day-cell.empty {
+    display: none;
+  }
+}

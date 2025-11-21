@@ -188,9 +188,32 @@ app.post("/clock-in", async (req, res) => {
     const { uid, email } = req.body;
     const now = new Date().toISOString();
 
-    const docRef = await db.collection("attendance").add({ uid, email, clockIn: now, clockOut: null });
+    // 🔥 Fetch user info from users collection
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists)
+      return res.status(404).json({ error: "User not found in users collection" });
+
+    const userData = userSnap.data();
+
+    // Prepare attendance fields
+    const recordData = {
+      uid,
+      email,
+      name: userData.name || "",     // 🔥 NEW FIELD
+      role: userData.role || "",     // 🔥 NEW FIELD
+      clockIn: now,
+      clockOut: null
+    };
+
+    // Insert attendance record
+    const docRef = await db.collection("attendance").add(recordData);
     const snap = await docRef.get();
-    res.json({ success: true, record: { id: docRef.id, ...snap.data() } });
+
+    res.json({
+      success: true,
+      record: { id: docRef.id, ...snap.data() },
+    });
+
   } catch (error) {
     console.error("clock-in error:", error);
     res.status(500).json({ error: "Failed to clock in" });
@@ -244,10 +267,33 @@ app.get("/get-attendance/:uid", async (req, res) => {
 });
 
 // Get all attendance
+// Get all attendance (WITH name + role)
 app.get("/get-all-attendance", async (req, res) => {
   try {
-    const snapshot = await db.collection("attendance").orderBy("clockIn", "desc").get();
-    const records = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    // 1. Fetch attendance logs
+    const snapshot = await db
+      .collection("attendance")
+      .orderBy("clockIn", "desc")
+      .get();
+
+    const records = [];
+
+    // 2. For each record, fetch corresponding user info
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+
+      const userSnap = await db.collection("users").doc(data.uid).get();
+      const userInfo = userSnap.exists ? userSnap.data() : {};
+
+      records.push({
+        id: doc.id,
+        ...data,
+        name: userInfo.name || "Unknown",
+        role: userInfo.role || "Unknown",
+        email: userInfo.email || data.email || "Unknown",
+      });
+    }
+
     res.json({ records });
   } catch (error) {
     console.error("get-all-attendance error:", error);

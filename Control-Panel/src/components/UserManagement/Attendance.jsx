@@ -1,4 +1,4 @@
-// src/components/UserManagement/Attendance.jsx
+// Control-Panel\src\components\UserManagement\Attendance.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../../firebase/firestore";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -17,100 +17,159 @@ export default function Attendance() {
   }, []);
 
   // -----------------------------
-  // Helper: Convert Firestore timestamp to ISO string
+  // Helpers: parse + format dates
   // -----------------------------
-  const formatTimestamp = (ts) => {
-    if (!ts) return "";
-    if (typeof ts === "string") return ts;
-    if (ts.seconds) return new Date(ts.seconds * 1000).toISOString();
-    return "";
+  const toDate = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value === "string") return new Date(value);
+    if (typeof value === "object" && value.seconds) return new Date(value.seconds * 1000);
+    return null;
+  };
+
+  const formatReadable = (value) => {
+    const d = toDate(value);
+    if (!d) return "";
+    const opts = { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true };
+    return d.toLocaleString("en-US", opts).replace(", ", " ");
+  };
+
+  const toISOStringSafe = (value) => {
+    const d = toDate(value);
+    return d ? d.toISOString() : "";
+  };
+
+  const getTotalHours = (clockIn, clockOut) => {
+    const start = toDate(clockIn);
+    const end = toDate(clockOut);
+    if (!start || !end) return 0;
+    const ms = end - start;
+    return ms > 0 ? (ms / 1000 / 60 / 60).toFixed(2) : 0;
   };
 
   // -----------------------------
-  // Fetch and group by day
+  // Fetch attendance
   // -----------------------------
   const fetchAttendance = async () => {
     try {
       const snap = await getDocs(collection(db, "attendance"));
       const data = {};
+
       snap.forEach((docSnap) => {
         const entry = docSnap.data();
         if (!entry.clockIn) return;
 
-        const clockInStr = formatTimestamp(entry.clockIn);
-        const dateKey = clockInStr.split("T")[0]; // YYYY-MM-DD
+        const clockInIso = toISOStringSafe(entry.clockIn);
+        const clockOutIso = toISOStringSafe(entry.clockOut);
+        const dateKey = clockInIso ? clockInIso.split("T")[0] : "unknown";
 
         if (!data[dateKey]) data[dateKey] = [];
-        data[dateKey].push({ ...entry, clockIn: clockInStr, clockOut: formatTimestamp(entry.clockOut), id: docSnap.id });
+
+        data[dateKey].push({
+          ...entry,
+          clockInIso,
+          clockOutIso,
+          clockIn: formatReadable(entry.clockIn),
+          clockOut: formatReadable(entry.clockOut),
+          totalHours: getTotalHours(entry.clockIn, entry.clockOut),
+          id: docSnap.id,
+        });
       });
-      setAttendanceData(data);
+
+      // sort dates latest first, then records within date by clockIn desc
+      const sortedData = Object.keys(data)
+        .sort((a, b) => new Date(b) - new Date(a))
+        .reduce((acc, key) => {
+          acc[key] = data[key].sort((x, y) => new Date(y.clockInIso) - new Date(x.clockInIso));
+          return acc;
+        }, {});
+
+      setAttendanceData(sortedData);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching attendance:", err);
+      setLoading(false);
     }
   };
 
   // -----------------------------
-  // Export Excel
+  // Export
   // -----------------------------
   const exportToExcel = (day, rows) => {
     const worksheet = XLSX.utils.json_to_sheet(
-      rows.map(r => ({
+      rows.map((r) => ({
         Name: r.name,
         Email: r.email,
         "Clock In": r.clockIn,
-        "Clock Out": r.clockOut
+        "Clock Out": r.clockOut,
+        "Total Hours": r.totalHours,
       }))
     );
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-    const safeDay = day.replaceAll("-", "_");
-    XLSX.writeFile(workbook, `Attendance-${safeDay}.xlsx`);
+    XLSX.writeFile(workbook, `Attendance-${day.replaceAll("-", "_")}.xlsx`);
   };
 
-  // -----------------------------
-  // Export PDF
-  // -----------------------------
   const exportToPDF = (day, rows) => {
     try {
-      const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text(`Attendance for ${day}`, 10, 10);
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      doc.setFontSize(14);
+      doc.text(`Attendance for ${day}`, 40, 40);
+
+      const body = rows.map((r) => [
+        r.name || "-",
+        r.email || "-",
+        r.clockIn || "-",
+        r.clockOut || "-",
+        r.totalHours || "0.00",
+      ]);
+
       doc.autoTable({
-        startY: 20,
-        head: [["Name", "Email", "Clock In", "Clock Out"]],
-        body: rows.map(r => [r.name, r.email, r.clockIn, r.clockOut]),
+        startY: 60,
+        head: [["Name", "Email", "Clock In", "Clock Out", "Total Hours"]],
+        body,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [30, 41, 59], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        margin: { left: 40, right: 40 },
       });
-      const safeDay = day.replaceAll("-", "_");
-      doc.save(`Attendance-${safeDay}.pdf`);
+
+      doc.save(`Attendance-${day.replaceAll("-", "_")}.pdf`);
     } catch (err) {
-      console.error("PDF Export Failed:", err);
+      console.error("PDF export failed:", err);
       alert("PDF export failed. Check console.");
     }
   };
 
   // -----------------------------
-  // Delete record
+  // Delete
   // -----------------------------
   const handleDelete = async (id) => {
-    if (confirm("Delete this record?")) {
-      try {
-        await deleteDoc(doc(db, "attendance", id));
-        fetchAttendance();
-      } catch (err) {
-        console.error(err);
-        alert("Failed to delete record.");
-      }
+    if (!confirm("Delete this record?")) return;
+    try {
+      await deleteDoc(doc(db, "attendance", id));
+      fetchAttendance();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete record.");
     }
   };
 
   // -----------------------------
-  // Save edit
+  // Save edited
   // -----------------------------
   const handleSave = async () => {
     try {
-      const { id, clockIn, clockOut, name, email } = editRecord;
-      await updateDoc(doc(db, "attendance", id), { clockIn, clockOut, name, email });
+      if (!editRecord?.id) return;
+      const { id, clockInIso, clockOutIso, name, email } = editRecord;
+
+      await updateDoc(doc(db, "attendance", id), {
+        clockIn: clockInIso || null,
+        clockOut: clockOutIso || null,
+        name,
+        email,
+      });
+
       setEditRecord(null);
       fetchAttendance();
     } catch (err) {
@@ -131,6 +190,7 @@ export default function Attendance() {
         <div className="attendance-grid">
           {Object.keys(attendanceData).map((day) => {
             const rows = attendanceData[day];
+
             return (
               <div className="attendance-card" key={day}>
                 <div className="attendance-card-header">
@@ -149,6 +209,7 @@ export default function Attendance() {
                         <th>Email</th>
                         <th>Clock In</th>
                         <th>Clock Out</th>
+                        <th>Total Hours</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -159,9 +220,7 @@ export default function Attendance() {
                             {editRecord?.id === r.id ? (
                               <input
                                 value={editRecord.name}
-                                onChange={(e) =>
-                                  setEditRecord({ ...editRecord, name: e.target.value })
-                                }
+                                onChange={(e) => setEditRecord({ ...editRecord, name: e.target.value })}
                               />
                             ) : (
                               r.name
@@ -172,11 +231,12 @@ export default function Attendance() {
                             {editRecord?.id === r.id ? (
                               <input
                                 type="datetime-local"
-                                value={editRecord.clockIn.slice(0, 16)}
+                                value={editRecord.clockInIso?.slice(0, 16) || ""}
                                 onChange={(e) =>
                                   setEditRecord({
                                     ...editRecord,
-                                    clockIn: new Date(e.target.value).toISOString(),
+                                    clockInIso: new Date(e.target.value).toISOString(),
+                                    clockIn: formatReadable(new Date(e.target.value)),
                                   })
                                 }
                               />
@@ -188,11 +248,12 @@ export default function Attendance() {
                             {editRecord?.id === r.id ? (
                               <input
                                 type="datetime-local"
-                                value={editRecord.clockOut?.slice(0, 16) || ""}
+                                value={editRecord.clockOutIso?.slice(0, 16) || ""}
                                 onChange={(e) =>
                                   setEditRecord({
                                     ...editRecord,
-                                    clockOut: new Date(e.target.value).toISOString(),
+                                    clockOutIso: e.target.value ? new Date(e.target.value).toISOString() : "",
+                                    clockOut: e.target.value ? formatReadable(new Date(e.target.value)) : "",
                                   })
                                 }
                               />
@@ -200,6 +261,7 @@ export default function Attendance() {
                               r.clockOut
                             )}
                           </td>
+                          <td>{r.totalHours}</td>
                           <td className="actions">
                             {editRecord?.id === r.id ? (
                               <>
@@ -208,7 +270,18 @@ export default function Attendance() {
                               </>
                             ) : (
                               <>
-                                <button className="edit" onClick={() => setEditRecord(r)}>Edit</button>
+                                <button
+                                  className="edit"
+                                  onClick={() =>
+                                    setEditRecord({
+                                      ...r,
+                                      clockInIso: r.clockInIso || toISOStringSafe(r.clockIn),
+                                      clockOutIso: r.clockOutIso || toISOStringSafe(r.clockOut),
+                                    })
+                                  }
+                                >
+                                  Edit
+                                </button>
                                 <button className="delete" onClick={() => handleDelete(r.id)}>Delete</button>
                               </>
                             )}
@@ -217,6 +290,53 @@ export default function Attendance() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* MOBILE stacked cards */}
+                <div className="attendance-mobile">
+                  {rows.map((r) => (
+                    <div className="attendance-mobile-card" key={`${r.id}-mobile`}>
+                      <div className="attendance-mobile-row">
+                        <strong>Name:</strong> <div>{r.name || "-"}</div>
+                      </div>
+                      <div className="attendance-mobile-row">
+                        <strong>Email:</strong> <div>{r.email || "-"}</div>
+                      </div>
+                      <div className="attendance-mobile-row">
+                        <strong>Clock In:</strong> <div>{r.clockIn || "-"}</div>
+                      </div>
+                      <div className="attendance-mobile-row">
+                        <strong>Clock Out:</strong> <div>{r.clockOut || "-"}</div>
+                      </div>
+                      <div className="attendance-mobile-row">
+                        <strong>Total Hours:</strong> <div>{r.totalHours}</div>
+                      </div>
+                      <div className="attendance-mobile-actions">
+                        {editRecord?.id === r.id ? (
+                          <>
+                            <button className="save" onClick={handleSave}>Save</button>
+                            <button className="cancel" onClick={() => setEditRecord(null)}>Cancel</button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="edit"
+                              onClick={() =>
+                                setEditRecord({
+                                  ...r,
+                                  clockInIso: r.clockInIso || toISOStringSafe(r.clockIn),
+                                  clockOutIso: r.clockOutIso || toISOStringSafe(r.clockOut),
+                                })
+                              }
+                            >
+                              Edit
+                            </button>
+                            <button className="delete" onClick={() => handleDelete(r.id)}>Delete</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
