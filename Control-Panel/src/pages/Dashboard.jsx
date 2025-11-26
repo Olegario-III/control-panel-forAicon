@@ -10,6 +10,7 @@ import ProductCatalog from "../components/ProductCatalog";
 import Inquiries from "../components/Inquiries";
 import Overview from "../components/Overview";
 import Profile from "../components/Profile";
+import Leads from "../components/Leads";
 
 export default function Dashboard() {
   const { user, role, loading } = useAuth();
@@ -34,7 +35,7 @@ export default function Dashboard() {
       case "Documents":
         return <p>Documents — upload and organize your files.</p>;
       case "Leads":
-        return <p>Leads — track new potential clients.</p>;
+        return <Leads />;
       case "Inquiries":
         return <Inquiries />;
       case "Profile":

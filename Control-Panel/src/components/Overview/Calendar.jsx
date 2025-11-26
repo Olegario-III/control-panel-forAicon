@@ -1,17 +1,16 @@
-// Control-Panel\src\components\Overview\Calendar.jsx
 import React, { useEffect, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firestore";
+import { useAuth } from "../../context/AuthContext";
 import "./Overview.css";
 
 export default function Calendar({ title, offset }) {
+  const { role } = useAuth(); // ✅ Check if admin/staff
+
   const [notes, setNotes] = useState({});
   const [editingDate, setEditingDate] = useState(null);
   const [text, setText] = useState("");
 
-  // ─────────────────────────────────────────────
-  // 📅 Compute the month based on offset
-  // ─────────────────────────────────────────────
   const today = new Date();
   const monthDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
   const month = monthDate.getMonth();
@@ -20,24 +19,16 @@ export default function Calendar({ title, offset }) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // ONE shared Firestore document per month (visible to all users)
   const monthId = `${year}-${month + 1}`;
   const notesDocRef = doc(db, "calendarNotes", monthId);
 
-  // ─────────────────────────────────────────────
-  // 📌 Load notes from Firestore
-  // ─────────────────────────────────────────────
+  // Load notes
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        console.log("Fetching:", monthId);
         const snap = await getDoc(notesDocRef);
-
-        if (snap.exists()) {
-          setNotes(snap.data());
-        } else {
-          setNotes({});
-        }
+        if (snap.exists()) setNotes(snap.data());
+        else setNotes({});
       } catch (err) {
         console.error("Error loading notes:", err);
       }
@@ -46,16 +37,12 @@ export default function Calendar({ title, offset }) {
     fetchNotes();
   }, [year, month]);
 
-  // ─────────────────────────────────────────────
-  // 💾 Save note to Firestore
-  // ─────────────────────────────────────────────
+  // Save note (admin only)
   const saveNote = async () => {
+    if (role !== "admin") return; // ❌ reject staff
     try {
       const updated = { ...notes, [editingDate]: text };
-
       await setDoc(notesDocRef, updated, { merge: true });
-
-      console.log("Saved:", updated);
       setNotes(updated);
       setEditingDate(null);
     } catch (err) {
@@ -80,35 +67,39 @@ export default function Calendar({ title, offset }) {
           </div>
         ))}
 
-        {/* Empty slots for alignment */}
+        {/* Empty placeholders */}
         {Array.from({ length: firstDay }).map((_, i) => (
           <div key={"empty-" + i} className="day-cell empty"></div>
         ))}
 
         {/* Days */}
-        {/* Days */}
-{Array.from({ length: daysInMonth }, (_, i) => {
-  const day = i + 1;
-  const dayName = new Date(year, month, day).toLocaleDateString(undefined, { weekday: "short" });
-  return (
-    <div
-      key={day}
-      className="day-cell"
-      onClick={() => {
-        setEditingDate(day);
-        setText(notes[day] || "");
-      }}
-    >
-      <div className="day-number">{day}</div>
-      <div className="day-name">{dayName}</div> {/* New: day name */}
-      <div className="note-text">{notes[day]}</div>
-    </div>
-  );
-})}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const dayName = new Date(year, month, day).toLocaleDateString(
+            undefined,
+            { weekday: "short" }
+          );
+
+          return (
+            <div
+              key={day}
+              className={`day-cell ${role !== "admin" ? "readonly" : ""}`}
+              onClick={() => {
+                if (role !== "admin") return; // ❌ block staff
+                setEditingDate(day);
+                setText(notes[day] || "");
+              }}
+            >
+              <div className="day-number">{day}</div>
+              <div className="day-name">{dayName}</div>
+              <div className="note-text">{notes[day]}</div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Popup Editor */}
-      {editingDate && (
+      {/* Popup Editor (admin only) */}
+      {editingDate && role === "admin" && (
         <div className="modal-overlay">
           <div className="modal-box">
             <h3>Edit Note — {editingDate}</h3>

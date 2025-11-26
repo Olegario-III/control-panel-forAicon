@@ -71,7 +71,7 @@
 }
 
 .day-cell:hover {
-  background: #f0f0f0;
+  background: #e0e0e0;
 }
 
 .day-number {
@@ -82,7 +82,7 @@
 .note-text {
   font-size: 12px;
   white-space: pre-wrap;
-  color: #555;
+  color: black;
 }
 
 .empty {
@@ -120,6 +120,34 @@
   display: flex;
   justify-content: space-between;
 }
+
+/* Default hover for admin only */
+.day-cell:hover {
+  background: #0f172a;  /* dark */
+}
+
+.day-cell:hover .day-number,
+.day-cell:hover .day-name,
+.day-cell:hover .note-text {
+  color: #f1f5f9; /* readable text */
+}
+
+/* 🚫 NON-ADMIN (no-edit class) */
+/* Remove hover color and keep everything visible */
+.no-edit {
+  cursor: default !important;
+}
+
+.no-edit:hover {
+  background: #1e293b !important; /* DO NOT turn black */
+}
+
+.no-edit:hover .day-number,
+.no-edit:hover .day-name,
+.no-edit:hover .note-text {
+  color: #e2e8f0 !important; /* stay readable */
+}
+
 
 /* Big screens (PC) */
 @media (min-width: 1024px) {

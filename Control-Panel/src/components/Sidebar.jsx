@@ -1,8 +1,7 @@
-// src/components/Sidebar.jsx
 import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar({ onSelect, mobileOpen }) {
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
 
   const menuItems = [
     "Dashboard",
@@ -27,11 +26,20 @@ export default function Sidebar({ onSelect, mobileOpen }) {
 
           {role === "admin" &&
             adminOnly.map((item) => (
-              <li key={item} className="admin-item" onClick={() => onSelect(item)}>
+              <li
+                key={item}
+                className="admin-item"
+                onClick={() => onSelect(item)}
+              >
                 {item}
               </li>
             ))}
         </ul>
+
+        {/* ✅ LOGOUT BUTTON */}
+        <button className="logout-btn" onClick={logout}>
+          Logout
+        </button>
       </nav>
 
       <style>{`
@@ -45,7 +53,6 @@ export default function Sidebar({ onSelect, mobileOpen }) {
           z-index: 11;
         }
 
-        /* Menu list */
         ul {
           list-style: none;
           padding: 0;
@@ -64,14 +71,29 @@ export default function Sidebar({ onSelect, mobileOpen }) {
           background: #334155;
         }
 
-        /* Admin-only section */
         .admin-item {
           border-top: 1px solid #334155;
           margin-top: 10px;
           padding-top: 16px;
         }
 
-        /* MOBILE SIDEBAR */
+        /* ✅ LOGOUT BUTTON STYLE (dark theme stays consistent) */
+        .logout-btn {
+          width: 100%;
+          margin-top: 20px;
+          padding: 12px 20px;
+          background: #dc2626; 
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 1rem;
+          transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+          background: #b91c1c;
+        }
+
         @media (max-width: 900px) {
           .sidebar {
             position: fixed;
