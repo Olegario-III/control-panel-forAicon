@@ -7,6 +7,7 @@ export default function Overview() {
   const [time, setTime] = useState(new Date());
   const [clockedInAdmins, setClockedInAdmins] = useState(0);
   const [clockedInStaff, setClockedInStaff] = useState(0);
+  const [clockedInInterns, setClockedInInterns] = useState(0);
 
   // Live clock
   useEffect(() => {
@@ -18,11 +19,12 @@ export default function Overview() {
   useEffect(() => {
   async function loadData() {
     try {
-      const res = await fetch("http://localhost:5000/attendance/clocked-in");
+      const res = await fetch("https://backend-controlpanel.onrender.com/attendance/clocked-in");
       const data = await res.json();
       console.log("clocked-in raw:", data);
       setClockedInAdmins(data.admins || 0);
       setClockedInStaff(data.staff || 0);
+      setClockedInInterns(data.intern || 0);
       // optional: show raw counts on UI while debugging
       // setRawActiveDocs(data.rawActiveDocs);
     } catch (err) {
@@ -50,8 +52,13 @@ export default function Overview() {
         </div>
 
         <div className="counter-card">
-          <h3>Staff Clocked In</h3>
+          <h3>Staffs Clocked In</h3>
           <span>{clockedInStaff}</span>
+        </div>
+
+        <div className="counter-card">
+          <h3>Interns Clocked In</h3>
+          <span>{clockedInInterns}</span>
         </div>
       </div>
 

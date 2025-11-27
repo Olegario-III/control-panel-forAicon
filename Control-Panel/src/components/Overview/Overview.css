@@ -211,4 +211,7 @@
   .day-cell.empty {
     display: none;
   }
+  .counter-row {
+    flex-direction: column;
+  }
 }

@@ -1,9 +1,10 @@
+//Control-Panel\src\pages\Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/auth";
 import { db } from "../firebase/firestore";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -34,6 +35,33 @@ export default function Login() {
     setLoading(false);
   };
 
+  const handleSignup = async () => {
+    if (!email || !password) {
+      alert("Please fill in email and password.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create Firebase Auth Account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Store in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        role: "client",  // default role
+        createdAt: new Date().toISOString()
+      });
+
+      localStorage.setItem("userRole", "client");
+      navigate("/dashboard");
+    } catch (error) {
+      alert("Signup failed: " + error.message);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="login-page">
       <div className="login-box">
@@ -60,10 +88,20 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+
           <button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Login"}
+            {loading ? "Processing..." : "Login"}
           </button>
         </form>
+
+        {/* Sign Up Button */}
+        <button
+          style={{ marginTop: "15px", background: "#10b981" }}
+          onClick={handleSignup}
+          disabled={loading}
+        >
+          {loading ? "Processing..." : "Sign Up as Client"}
+        </button>
       </div>
 
       <style jsx>{`

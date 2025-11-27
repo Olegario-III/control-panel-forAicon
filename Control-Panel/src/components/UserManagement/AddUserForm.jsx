@@ -11,7 +11,7 @@ export default function AddUserForm({ onUserAdded }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/add-user", {
+      const res = await fetch("https://backend-controlpanel.onrender.com/add-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),

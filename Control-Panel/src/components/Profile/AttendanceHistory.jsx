@@ -34,7 +34,7 @@ export default function AttendanceHistory() {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/get-attendance/${user.uid}`);
+        const res = await fetch(`https://backend-controlpanel.onrender.com/get-attendance/${user.uid}`);
         const data = await res.json();
         const recs = data.records || [];
 

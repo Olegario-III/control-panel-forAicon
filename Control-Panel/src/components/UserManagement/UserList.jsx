@@ -13,7 +13,7 @@ export default function UserList({ refresh }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("http://localhost:5000/get-users");
+      const res = await fetch("https://backend-controlpanel.onrender.com/get-users");
       const data = await res.json();
       setUsers(data.users);
     } catch (err) {
@@ -28,7 +28,7 @@ export default function UserList({ refresh }) {
     }
     if (confirm("Delete this user?")) {
       try {
-        const res = await fetch(`http://localhost:5000/delete-user/${uid}`, {
+        const res = await fetch(`https://backend-controlpanel.onrender.com/delete-user/${uid}`, {
           method: "DELETE",
         });
         const data = await res.json();
@@ -48,7 +48,7 @@ export default function UserList({ refresh }) {
 
   const handleSave = async (uid) => {
     try {
-      const res = await fetch(`http://localhost:5000/update-user/${uid}`, {
+      const res = await fetch(`https://backend-controlpanel.onrender.com/update-user/${uid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editData),
@@ -121,6 +121,7 @@ export default function UserList({ refresh }) {
                         >
                           <option value="admin">Admin</option>
                           <option value="staff">Staff</option>
+                          <option value="intern">Intern</option>
                           <option value="client">Client</option>
                         </select>
                       ) : (

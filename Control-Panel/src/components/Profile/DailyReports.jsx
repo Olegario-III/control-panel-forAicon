@@ -44,7 +44,7 @@ export default function DailyReports() {
 
   // -------------------------- FETCH REPORTS --------------------------
   const fetchReports = async () => {
-    const res = await fetch(`http://localhost:5000/get-reports/${user.uid}`);
+    const res = await fetch(`https://backend-controlpanel.onrender.com/get-reports/${user.uid}`);
     const data = await res.json();
     setReports(data.reports || []);
   };
@@ -59,11 +59,11 @@ export default function DailyReports() {
     const reportDate = date ? new Date(date) : new Date();
 
     const payload = { uid: user.uid, email: user.email, report, date: reportDate.toISOString() };
-    let url = "http://localhost:5000/add-report";
+    let url = "https://backend-controlpanel.onrender.com/add-report";
     let method = "POST";
 
     if (editingId) {
-      url = `http://localhost:5000/update-report/${editingId}`;
+      url = `https://backend-controlpanel.onrender.com/update-report/${editingId}`;
       method = "PUT";
     }
 
@@ -91,7 +91,7 @@ export default function DailyReports() {
   // -------------------------- DELETE --------------------------
   const deleteReport = async (id) => {
     if (!confirm("Delete this report?")) return;
-    const res = await fetch(`http://localhost:5000/delete-report/${id}`, { method: "DELETE" });
+    const res = await fetch(`https://backend-controlpanel.onrender.com/delete-report/${id}`, { method: "DELETE" });
     const data = await res.json();
     setMsg(data.message || data.error);
     fetchReports();

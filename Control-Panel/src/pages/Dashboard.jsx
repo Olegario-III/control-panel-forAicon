@@ -11,6 +11,7 @@ import Inquiries from "../components/Inquiries";
 import Overview from "../components/Overview";
 import Profile from "../components/Profile";
 import Leads from "../components/Leads";
+import Documents from "../components/Documents";
 
 export default function Dashboard() {
   const { user, role, loading } = useAuth();
@@ -26,14 +27,15 @@ export default function Dashboard() {
   const renderContent = () => {
     if (role === "admin" && selected === "User Management") return <UserManagement />;
     if (role === "admin" && selected === "Reports") return <Reports />;
+    if (role !== "client" && selected === "Dashboard") return <Overview />;
 
     switch (selected) {
       case "Dashboard":
-        return <Overview />;
+        return <p>Dashboard — overview of key metrics.</p>;
       case "Product Catalog":
         return <ProductCatalog />;
       case "Documents":
-        return <p>Documents — upload and organize your files.</p>;
+        return <Documents />;
       case "Leads":
         return <Leads />;
       case "Inquiries":
