@@ -28,18 +28,16 @@ export default function Dashboard() {
     if (role === "admin" && selected === "User Management") return <UserManagement />;
     if (role === "admin" && selected === "Reports") return <Reports />;
     if (role !== "client" && selected === "Dashboard") return <Overview />;
+    if (role !== "client" && selected === "Leads") return <Leads />;
+    if (role !== "client" && selected === "Inquiries") return <Inquiries />;
 
     switch (selected) {
       case "Dashboard":
         return <p>Dashboard — overview of key metrics.</p>;
       case "Product Catalog":
         return <ProductCatalog />;
-      case "Documents":
+      case "FB Posted Products":
         return <Documents />;
-      case "Leads":
-        return <Leads />;
-      case "Inquiries":
-        return <Inquiries />;
       case "Profile":
         return <Profile />;
       default:

@@ -6,7 +6,7 @@ export default function Sidebar({ onSelect, mobileOpen }) {
   const menuItems = [
     "Dashboard",
     "Product Catalog",
-    "Documents",
+    "FB Posted Products",
     "Leads",
     "Inquiries",
     "Profile",

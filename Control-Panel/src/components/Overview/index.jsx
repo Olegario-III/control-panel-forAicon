@@ -19,7 +19,7 @@ export default function Overview() {
   useEffect(() => {
   async function loadData() {
     try {
-      const res = await fetch("https://backend-controlpanel.onrender.com/attendance/clocked-in");
+      const res = await fetch("https://backend-controlpanel.onrender.com/get-attendance/clocked-in");
       const data = await res.json();
       console.log("clocked-in raw:", data);
       setClockedInAdmins(data.admins || 0);
