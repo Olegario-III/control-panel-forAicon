@@ -15,33 +15,51 @@ export default function Overview() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch clock-in counts
+  // Fetch and count active clock-ins
   useEffect(() => {
-  async function loadData() {
-    try {
-      const res = await fetch("https://backend-controlpanel.onrender.com/get-attendance/clocked-in");
-      const data = await res.json();
-      console.log("clocked-in raw:", data);
-      setClockedInAdmins(data.admins || 0);
-      setClockedInStaff(data.staff || 0);
-      setClockedInInterns(data.intern || 0);
-      // optional: show raw counts on UI while debugging
-      // setRawActiveDocs(data.rawActiveDocs);
-    } catch (err) {
-      console.error("Error loading attendance:", err);
-    }
-  }
-  loadData();
-}, []);
+    async function loadData() {
+      try {
+        const res = await fetch("https://backend-controlpanel.onrender.com/get-all-attendance");
+        const data = await res.json();
+        console.log("all attendance raw:", data.records);
 
+        // Filter only active clock-ins
+        const activeRecords = data.records.filter(r => r.clockOut == null);
+
+        // Count by role
+        const admins = activeRecords.filter(r => r.role === "admin").length;
+        const staff = activeRecords.filter(r => r.role === "staff").length;
+        const interns = activeRecords.filter(r => r.role === "intern").length;
+
+        setClockedInAdmins(admins);
+        setClockedInStaff(staff);
+        setClockedInInterns(interns);
+      } catch (err) {
+        console.error("Error loading attendance:", err);
+      }
+    }
+
+    loadData();
+
+    // Optional: refresh counts every 30 seconds
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="overview-container">
-      
+
       {/* CLOCK */}
       <div className="clock-box">
         <h2>{time.toLocaleTimeString()}</h2>
-        <p>{time.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</p>
+        <p>
+          {time.toLocaleDateString(undefined, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </p>
       </div>
 
       {/* COUNTERS */}
