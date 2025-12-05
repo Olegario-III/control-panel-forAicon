@@ -42,6 +42,20 @@ export default function DailyReports() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
+
+const combineDateWithCurrentTime = (dateStr) => {
+  const d = new Date(dateStr);
+  const now = new Date();
+
+  d.setHours(now.getHours());
+  d.setMinutes(now.getMinutes());
+  d.setSeconds(now.getSeconds());
+  d.setMilliseconds(now.getMilliseconds());
+
+  return d;
+};
+
+
   // -------------------------- FETCH REPORTS --------------------------
   const fetchReports = async () => {
     const res = await fetch(`https://backend-controlpanel.onrender.com/get-reports/${user.uid}`);
@@ -56,7 +70,9 @@ export default function DailyReports() {
   // -------------------------- SUBMIT / UPDATE --------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const reportDate = date ? new Date(date) : new Date();
+    const reportDate = date
+  ? combineDateWithCurrentTime(date)
+  : new Date();
 
     const payload = { uid: user.uid, email: user.email, report, date: reportDate.toISOString() };
     let url = "https://backend-controlpanel.onrender.com/add-report";
