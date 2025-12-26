@@ -82,7 +82,7 @@ export default function Dashboard() {
           display: flex;
           width: 100vw;
           height: 100vh;
-          background-color: #0f172a;
+          background: #0f172a;
           color: #f9fafb;
           overflow: hidden;
           position: relative;
@@ -123,7 +123,14 @@ export default function Dashboard() {
 
         .content {
           flex: 1;
-          background: #1e293b;
+          min-height: 100%; 
+          min-height: calc(100vh - 140px);
+
+          background-image: url("/bg_AiconImage.jpg");
+          background-size: cover;        /* fill screen */
+          background-position: center;   /* center image */
+          background-repeat: no-repeat;
+
           padding: 20px;
           border-radius: 10px;
         }
