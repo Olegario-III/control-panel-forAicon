@@ -171,6 +171,7 @@ export default function ClockInOut() {
 
 const card = {
   background: "#374151",
+  backgroundColor: "rgba(30, 41, 59, 0.7)",
   padding: "15px",
   borderRadius: "8px",
   marginBottom: "20px",
