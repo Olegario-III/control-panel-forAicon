@@ -10,6 +10,7 @@ export default function Sidebar({ onSelect, mobileOpen }) {
     "Leads",
     "Inquiries",
     "Profile",
+    "Internship Exam"
   ];
 
   const adminOnly = ["User Management", "Reports"];

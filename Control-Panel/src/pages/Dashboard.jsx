@@ -12,6 +12,7 @@ import Overview from "../components/Overview";
 import Profile from "../components/Profile";
 import Leads from "../components/Leads";
 import Documents from "../components/Documents";
+import Iexam from "../components/Iexam";
 
 export default function Dashboard() {
   const { user, role, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function Dashboard() {
     if (role !== "client" && selected === "Dashboard") return <Overview />;
     if (role !== "client" && selected === "Leads") return <Leads />;
     if (role !== "client" && selected === "Inquiries") return <Inquiries />;
+    if (role !== "client" && selected === "Internship Exam") return <Iexam />;
 
     switch (selected) {
       case "Dashboard":
@@ -40,6 +42,8 @@ export default function Dashboard() {
         return <Documents />;
       case "Profile":
         return <Profile />;
+      case "Internship Exam":
+        return <Iexam />;
       default:
         return <p>Select a section from the sidebar.</p>;
     }

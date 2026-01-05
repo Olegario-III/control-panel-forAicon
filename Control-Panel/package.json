@@ -13,6 +13,7 @@
     "firebase": "^12.5.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.23",
+    "papaparse": "^5.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5",

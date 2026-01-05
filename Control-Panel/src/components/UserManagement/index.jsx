@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import UserList from "./UserList";
 import AddUserForm from "./AddUserForm";
 import Attendance from "./Attendance";
+import ExamResult from "./ExamResult"; // <-- new
 import "./UserManagement.css";
 
 export default function UserManagement() {
@@ -35,6 +36,13 @@ export default function UserManagement() {
         >
           🕒 Attendance
         </button>
+
+        <button
+          className={page === "exam" ? "active-tab" : ""}
+          onClick={() => setPage("exam")}
+        >
+          📝 Exam Result
+        </button>
       </div>
 
       {/* CONTENT */}
@@ -42,6 +50,7 @@ export default function UserManagement() {
         {page === "list" && <UserList />}
         {page === "add" && <AddUserForm />}
         {page === "attendance" && <Attendance />}
+        {page === "exam" && <ExamResult />} {/* <-- new */}
       </div>
     </div>
   );
