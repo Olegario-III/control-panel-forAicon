@@ -3,20 +3,24 @@ import React from "react";
 export default function ExamResult() {
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Exam Results</h2>
-      <p style={styles.subtitle}>
-        Below are the results of the intern exam. Please review carefully.
-      </p>
+      {/* HEADER */}
+      <div style={styles.header}>
+        <h2 style={styles.title}>📊 Exam Results</h2>
+        <p style={styles.subtitle}>
+          View the latest intern exam results below. Data updates automatically
+          as applicants complete the assessment.
+        </p>
+      </div>
 
-      <div style={styles.iframeWrapper}>
+      {/* CONTENT */}
+      <div style={styles.card}>
         <iframe
           src="https://docs.google.com/spreadsheets/d/1LU7reVO5oS_AVnhmDHtaqZ1iilUgNH6g57-ky6on2Yg/edit?usp=sharing"
-          width="100%"
-          height="800"
-          frameBorder="0"
           title="Exam Results"
+          style={styles.iframe}
+          loading="lazy"
         >
-          Loading…
+          Loading exam results…
         </iframe>
       </div>
     </div>
@@ -25,24 +29,35 @@ export default function ExamResult() {
 
 const styles = {
   container: {
-    padding: "20px",
+    padding: "24px",
     background: "#020617",
     color: "#e5e7eb",
     minHeight: "100vh",
   },
+  header: {
+    marginBottom: "16px",
+  },
   title: {
-    fontSize: "1.5rem",
-    marginBottom: "5px",
+    fontSize: "1.6rem",
+    marginBottom: "6px",
+    fontWeight: "600",
   },
   subtitle: {
-    fontSize: "0.9rem",
+    fontSize: "0.95rem",
     color: "#9ca3af",
-    marginBottom: "15px",
+    maxWidth: "600px",
+    lineHeight: "1.5",
   },
-  iframeWrapper: {
+  card: {
     background: "#0f172a",
-    borderRadius: "12px",
+    borderRadius: "14px",
     overflow: "hidden",
     border: "1px solid #1f2937",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+  },
+  iframe: {
+    width: "100%",
+    height: "800px",
+    border: "none",
   },
 };
