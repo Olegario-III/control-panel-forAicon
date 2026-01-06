@@ -16,6 +16,9 @@ import {
   doc,
 } from "firebase/firestore";
 
+/** 🔐 HARD-CODED ADMIN CREATE CODE */
+const ADMIN_CREATE_CODE = "AICON-ADMIN-2026";
+
 export default function Login() {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -28,7 +31,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // LOGIN
+  /* ================= LOGIN ================= */
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -62,9 +65,9 @@ export default function Login() {
     setLoading(false);
   };
 
-  // CREATE ACCOUNT
+  /* ================= CREATE ACCOUNT ================= */
   const handleSignup = async () => {
-    if (adminCode !== import.meta.env.VITE_ADMIN_CREATE_CODE) {
+    if (adminCode !== ADMIN_CREATE_CODE) {
       alert("Unauthorized account creation.");
       return;
     }
@@ -104,7 +107,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-box">
-        {/* LOGO (ALWAYS VISIBLE) */}
+        {/* LOGO */}
         <img
           src="https://raw.githubusercontent.com/Olegario-III/image/main/aicon%20Logo.jpg"
           alt="Aicon Logo"
@@ -118,7 +121,7 @@ export default function Login() {
             : "Sign in to access the Control Panel"}
         </p>
 
-        {/* LOGIN FORM */}
+        {/* LOGIN */}
         {!isCreating && (
           <form onSubmit={handleLogin}>
             <input
@@ -143,7 +146,7 @@ export default function Login() {
           </form>
         )}
 
-        {/* CREATE ACCOUNT FORM */}
+        {/* CREATE ACCOUNT */}
         {isCreating && (
           <>
             <input
@@ -195,12 +198,11 @@ export default function Login() {
           className="toggle-btn"
           onClick={() => setIsCreating(!isCreating)}
         >
-          {isCreating
-            ? "← Back to Login"
-            : "Create an Account"}
+          {isCreating ? "← Back to Login" : "Create an Account"}
         </button>
       </div>
 
+      {/* STYLES */}
       <style jsx>{`
         .login-page {
           height: 100vh;
@@ -219,6 +221,7 @@ export default function Login() {
           width: 100%;
           max-width: 420px;
           text-align: center;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
 
         .logo {
