@@ -158,11 +158,13 @@ export default function AttendanceHistory() {
 
       <style jsx>{`
         .attendance-history {
-          background: #1e293b;
-          padding: 15px;
-          border-radius: 8px;
-          color: #fff;
-          max-width: 100%;
+            backgroundColor: "rgba(30, 41, 59, 0.35)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            padding: "15px",
+            borderRadius: "12px",
+            marginBottom: "20px",
         }
 
         .pdf-btn {

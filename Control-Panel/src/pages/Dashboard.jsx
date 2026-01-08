@@ -82,13 +82,22 @@ export default function Dashboard() {
       </main>
 
       <style>{`
+          body {
+          margin: 0;
+          min-height: 100vh;
+          background-image: url("/bg_AiconImage.jpg");
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+        }
+
         .dashboard-wrapper {
           display: flex;
           width: 100vw;
-          height: 100vh;
-          background: #0f172a;
+          min-height: 100vh;
+          background: transparent;
           color: #f9fafb;
-          overflow: hidden;
           position: relative;
         }
 
@@ -105,11 +114,11 @@ export default function Dashboard() {
 
         /* Main content */
         .main-area {
+          backgroundColor: rgba(30, 41, 59, 0.1);
           flex: 1;
           display: flex;
           flex-direction: column;
           padding: 20px;
-          overflow-y: auto;
         }
 
         /* Header */
@@ -127,13 +136,14 @@ export default function Dashboard() {
 
         .content {
           flex: 1;
-          min-height: 100%; 
-          min-height: calc(100vh - 140px);
+          background: transparent;
+          // min-height: 100%; 
+          // min-height: calc(100vh - 140px);
 
-          background-image: url("/bg_AiconImage.jpg");
-          background-size: cover;        /* fill screen */
-          background-position: center;   /* center image */
-          background-repeat: no-repeat;
+          // background-image: url("/bg_AiconImage.jpg");
+          // background-size: cover;        /* fill screen */
+          // background-position: center;   /* center image */
+          // background-repeat: no-repeat;
 
           padding: 20px;
           border-radius: 10px;
