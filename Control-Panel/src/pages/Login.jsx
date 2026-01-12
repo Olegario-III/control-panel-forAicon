@@ -54,6 +54,7 @@ export default function Login() {
         const data = snapshot.docs[0].data();
         localStorage.setItem("userRole", data.role);
         localStorage.setItem("userName", data.name);
+        localStorage.setItem("userApproved", data.approved);
         navigate("/dashboard");
       } else {
         alert("⚠️ No user record found.");
@@ -91,6 +92,7 @@ export default function Login() {
         name,
         email: user.email,
         role,
+        approved: role === "intern" ? false : true, // 👈 KEY LINE
         createdAt: new Date().toISOString(),
       });
 

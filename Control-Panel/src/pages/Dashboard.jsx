@@ -1,5 +1,5 @@
 // src/pages/Dashboard.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
@@ -17,33 +17,65 @@ import Iexam from "../components/Iexam";
 export default function Dashboard() {
   const { user, role, loading } = useAuth();
   const [selected, setSelected] = useState("Dashboard");
-
-  // Mobile: sidebar open/close
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ✅ APPROVAL STATE
+  const [approved, setApproved] = useState(false);
+
+  // ✅ Fetch latest approved status from backend
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchApproval = async () => {
+      try {
+        const res = await fetch(
+          `https://backend-controlpanel-1.onrender.com/get-user/${user.uid}`
+        );
+        const data = await res.json();
+        if (data.user) setApproved(data.user.approved || false);
+      } catch (err) {
+        console.error("Failed to fetch approval:", err);
+      }
+    };
+
+    fetchApproval();
+  }, [user]);
 
   if (loading) return <p>Loading...</p>;
   if (!user) return <Navigate to="/login" replace />;
 
-  // Render pages
   const renderContent = () => {
+    // ADMIN ONLY
     if (role === "admin" && selected === "User Management") return <UserManagement />;
     if (role === "admin" && selected === "Reports") return <Reports />;
+
+    // DASHBOARD
     if (role !== "client" && selected === "Dashboard") return <Overview />;
-    if (role !== "client" && selected === "Leads") return <Leads />;
+
+    // LEADS ACCESS CONTROL
+    if (selected === "Leads") {
+      if (role === "admin" || role === "staff") return <Leads />;
+      if (role === "intern" && approved) return <Leads />;
+      if (role === "intern" && !approved)
+        return (
+          <div style={{ padding: 20, color: "#fbbf24" }}>
+            ⛔ Your account is pending approval. Please wait for an admin to approve your access to Leads.
+          </div>
+        );
+      return <p>Access denied.</p>;
+    }
+
+    // OTHER PAGES
     if (role !== "client" && selected === "Inquiries") return <Inquiries />;
     if (role !== "client" && selected === "Internship Exam") return <Iexam />;
 
     switch (selected) {
-      case "Dashboard":
-        return <p>Dashboard — overview of key metrics.</p>;
       case "Product Catalog":
         return <ProductCatalog />;
       case "FB Posted Products":
         return <Documents />;
       case "Profile":
         return <Profile />;
-      case "Internship Exam":
-        return <Iexam />;
       default:
         return <p>Select a section from the sidebar.</p>;
     }
@@ -51,21 +83,17 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-wrapper">
+      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Glow overlay when mobile sidebar is open */}
-      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)}></div>}
-
-      {/* Sidebar */}
       <Sidebar
         onSelect={(item) => {
           setSelected(item);
-          setSidebarOpen(false); // close after selection
+          setSidebarOpen(false);
         }}
         mobileOpen={sidebarOpen}
       />
 
       <main className="main-area">
-        {/* Mobile Header */}
         <button className="hamburger" onClick={() => setSidebarOpen(true)}>
           ☰
         </button>
@@ -74,7 +102,16 @@ export default function Dashboard() {
           <h1>{selected}</h1>
           <p>
             Welcome,{" "}
-            <strong>{role === "admin" ? "Admin" : "Staff"}</strong> ({user.email})
+            <strong>
+              {role === "admin"
+                ? "Admin"
+                : role === "staff"
+                ? "Staff"
+                : role === "intern"
+                ? "Intern"
+                : "User"}
+            </strong>{" "}
+            ({user.email})
           </p>
         </header>
 
@@ -82,7 +119,7 @@ export default function Dashboard() {
       </main>
 
       <style>{`
-          body {
+        body {
           margin: 0;
           min-height: 100vh;
           background-image: url("/bg_AiconImage.jpg");
@@ -96,61 +133,39 @@ export default function Dashboard() {
           display: flex;
           width: 100vw;
           min-height: 100vh;
-          background: transparent;
           color: #f9fafb;
-          position: relative;
         }
 
-        /* Mobile overlay when sidebar is open */
         .overlay {
           position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
+          inset: 0;
           background: rgba(0,0,0,0.5);
           z-index: 9;
         }
 
-        /* Main content */
         .main-area {
-          backgroundColor: rgba(30, 41, 59, 0.1);
           flex: 1;
           display: flex;
           flex-direction: column;
           padding: 20px;
         }
 
-        /* Header */
         .header {
           border-bottom: 1px solid #1e293b;
           margin-bottom: 20px;
-          padding-bottom: 10px;
         }
 
         h1 {
-          font-size: 1.8rem;
           color: #facc15;
           margin: 0 0 5px;
         }
 
         .content {
           flex: 1;
-          background: transparent;
-          // min-height: 100%; 
-          // min-height: calc(100vh - 140px);
-
-          // background-image: url("/bg_AiconImage.jpg");
-          // background-size: cover;        /* fill screen */
-          // background-position: center;   /* center image */
-          // background-repeat: no-repeat;
-
           padding: 20px;
           border-radius: 10px;
-          background-attachment: fixed;
         }
 
-        /* MOBILE ONLY */
         .hamburger {
           display: none;
         }
@@ -167,7 +182,6 @@ export default function Dashboard() {
             padding: 8px 12px;
             border-radius: 6px;
             color: white;
-            font-size: 1.2rem;
           }
 
           .main-area {

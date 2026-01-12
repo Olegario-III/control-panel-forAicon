@@ -13,7 +13,9 @@ export default function UserList({ refresh }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch("https://backend-controlpanel-1.onrender.com/get-users");
+      const res = await fetch(
+        "https://backend-controlpanel-1.onrender.com/get-users"
+      );
       const data = await res.json();
       setUsers(data.users);
     } catch (err) {
@@ -28,14 +30,14 @@ export default function UserList({ refresh }) {
     }
     if (confirm("Delete this user?")) {
       try {
-        const res = await fetch(`https://backend-controlpanel-1.onrender.com/delete-user/${uid}`, {
-          method: "DELETE",
-        });
+        const res = await fetch(
+          `https://backend-controlpanel-1.onrender.com/delete-user/${uid}`,
+          { method: "DELETE" }
+        );
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         fetchUsers();
       } catch (err) {
-        console.error(err);
         alert(err.message);
       }
     }
@@ -48,14 +50,37 @@ export default function UserList({ refresh }) {
 
   const handleSave = async (uid) => {
     try {
-      const res = await fetch(`https://backend-controlpanel-1.onrender.com/update-user/${uid}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
-      });
+      const res = await fetch(
+        `https://backend-controlpanel-1.onrender.com/update-user/${uid}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editData),
+        }
+      );
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  };
+
+  const handleApprove = async (uid) => {
+    if (!confirm("Approve this intern?")) return;
+
+    try {
+      const res = await fetch(
+        `https://backend-controlpanel-1.onrender.com/update-user/${uid}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approved: true }),
+        }
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
       fetchUsers();
     } catch (err) {
       alert("❌ " + err.message);
@@ -125,25 +150,57 @@ export default function UserList({ refresh }) {
                           <option value="client">Client</option>
                         </select>
                       ) : (
-                        u.role
+                        <>
+                          {u.role}
+                          {u.role === "intern" && (
+                            <span
+                              style={{
+                                marginLeft: 6,
+                                fontSize: 12,
+                                color: u.approved ? "#10b981" : "#fbbf24",
+                              }}
+                            >
+                              ({u.approved ? "Approved" : "Pending"})
+                            </span>
+                          )}
+                        </>
                       )}
                     </td>
 
                     <td className="actions">
                       {editingUser === u.uid ? (
                         <>
-                          <button className="save" onClick={() => handleSave(u.uid)}>
+                          <button
+                            className="save"
+                            onClick={() => handleSave(u.uid)}
+                          >
                             Save
                           </button>
-                          <button className="cancel" onClick={() => setEditingUser(null)}>
+                          <button
+                            className="cancel"
+                            onClick={() => setEditingUser(null)}
+                          >
                             Cancel
                           </button>
                         </>
                       ) : (
                         <>
-                          <button className="edit" onClick={() => handleEdit(u)}>
+                          <button
+                            className="edit"
+                            onClick={() => handleEdit(u)}
+                          >
                             Edit
                           </button>
+
+                          {u.role === "intern" && u.approved === false && (
+                            <button
+                              className="save"
+                              onClick={() => handleApprove(u.uid)}
+                            >
+                              Approve
+                            </button>
+                          )}
+
                           <button
                             className="delete"
                             onClick={() => handleDelete(u.uid, u.role)}
@@ -164,64 +221,35 @@ export default function UserList({ refresh }) {
             {users.map((u) => (
               <div className="user-card" key={u.uid}>
                 <div>
-                  <strong>Name:</strong>{" "}
-                  {editingUser === u.uid ? (
-                    <input
-                      value={editData.name}
-                      onChange={(e) =>
-                        setEditData({ ...editData, name: e.target.value })
-                      }
-                    />
-                  ) : (
-                    u.name
-                  )}
+                  <strong>Name:</strong> {u.name}
                 </div>
-
                 <div>
-                  <strong>Email:</strong>{" "}
-                  {editingUser === u.uid ? (
-                    <input
-                      type="email"
-                      value={editData.email}
-                      onChange={(e) =>
-                        setEditData({ ...editData, email: e.target.value })
-                      }
-                    />
-                  ) : (
-                    u.email
-                  )}
+                  <strong>Email:</strong> {u.email}
                 </div>
-
                 <div>
-                  <strong>Role:</strong>{" "}
-                  {editingUser === u.uid ? (
-                    <select
-                      value={editData.role}
-                      onChange={(e) =>
-                        setEditData({ ...editData, role: e.target.value })
-                      }
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="staff">Staff</option>
-                      <option value="client">Client</option>
-                    </select>
-                  ) : (
-                    u.role
+                  <strong>Role:</strong> {u.role}{" "}
+                  {u.role === "intern" && (
+                    <span style={{ color: u.approved ? "#10b981" : "#fbbf24" }}>
+                      ({u.approved ? "Approved" : "Pending"})
+                    </span>
                   )}
                 </div>
 
                 <div className="card-actions">
-                  {editingUser === u.uid ? (
-                    <>
-                      <button onClick={() => handleSave(u.uid)}>Save</button>
-                      <button onClick={() => setEditingUser(null)}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => handleEdit(u)}>Edit</button>
-                      <button onClick={() => handleDelete(u.uid, u.role)}>Delete</button>
-                    </>
+                  <button onClick={() => handleEdit(u)}>Edit</button>
+
+                  {u.role === "intern" && u.approved === false && (
+                    <button
+                      style={{ background: "#10b981", color: "white" }}
+                      onClick={() => handleApprove(u.uid)}
+                    >
+                      Approve
+                    </button>
                   )}
+
+                  <button onClick={() => handleDelete(u.uid, u.role)}>
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
@@ -235,53 +263,55 @@ export default function UserList({ refresh }) {
           padding: 1.5rem;
           border-radius: 12px;
           color: #f9fafb;
-          width: 100%;
         }
-
-        h3 { margin-bottom: 1rem; }
-
-        .table-wrapper { width: 100%; overflow-x: auto; }
-
         table {
           width: 100%;
-          min-width: 600px;
           border-collapse: collapse;
           background: #374151;
         }
-
-        th, td { padding: 12px 10px; border-bottom: 1px solid #4b5563; }
-        th { background: #111827; text-align: left; }
-
-        input, select {
-          background: #1f2937;
-          border: 1px solid #4b5563;
-          color: #f9fafb;
-          padding: 6px;
-          border-radius: 6px;
-          width: 100%;
+        th,
+        td {
+          padding: 12px;
+          border-bottom: 1px solid #4b5563;
         }
-
-        .actions { text-align: center; min-width: 150px; }
-
-        button { margin: 4px; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
-        button.edit { background: #3b82f6; color: white; }
-        button.delete { background: #ef4444; color: white; }
-        button.save { background: #10b981; color: white; }
-        button.cancel { background: #6b7280; color: white; }
-        button:hover { opacity: 0.9; transform: scale(1.05); }
-
-        /* MOBILE CARDS */
-        .user-cards { display: none; flex-direction: column; gap: 12px; }
-        .user-card { background: #0f172a; padding: 12px 15px; border-radius: 10px; color: white; display: flex; flex-direction: column; gap: 6px; }
-        .card-actions { margin-top: 8px; display: flex; gap: 8px; }
-        .card-actions button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
-        .card-actions button:first-child { background: #3b82f6; color: white; }
-        .card-actions button:last-child { background: #ef4444; color: white; }
-
-        /* RESPONSIVE */
+        th {
+          background: #111827;
+        }
+        button {
+          margin: 4px;
+          padding: 6px 10px;
+          border-radius: 6px;
+          border: none;
+          cursor: pointer;
+        }
+        .edit {
+          background: #3b82f6;
+          color: white;
+        }
+        .delete {
+          background: #ef4444;
+          color: white;
+        }
+        .save {
+          background: #10b981;
+          color: white;
+        }
+        .cancel {
+          background: #6b7280;
+          color: white;
+        }
+        .user-cards {
+          display: none;
+        }
         @media (max-width: 520px) {
-          table { display: none; }
-          .user-cards { display: flex; }
+          table {
+            display: none;
+          }
+          .user-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
         }
       `}</style>
     </div>
