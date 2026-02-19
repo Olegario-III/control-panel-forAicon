@@ -111,8 +111,8 @@ export default function Login() {
       <div className="login-box">
         {/* LOGO */}
         <img
-          src="https://raw.githubusercontent.com/Olegario-III/image/main/aicon%20Logo.jpg"
-          alt="Aicon Logo"
+          src="https://github.com/Olegario-III/image/blob/main/theVibeCoders_logo.jpg?raw=true"
+          alt="company Logo"
           className="logo"
         />
 
